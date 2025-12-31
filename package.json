@@ -1,0 +1,42 @@
+{
+  "name": "bhvr-ecom",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "dotenv": "^17.2.2",
+      "zod": "^4.1.13",
+      "typescript": "^5",
+      "@types/bun": "^1.3.4",
+      "better-auth": "^1.4.9"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:native": "turbo -F native dev",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F server dev",
+    "db:push": "turbo -F @bhvr-ecom/db db:push",
+    "db:studio": "turbo -F @bhvr-ecom/db db:studio",
+    "db:generate": "turbo -F @bhvr-ecom/db db:generate",
+    "db:migrate": "turbo -F @bhvr-ecom/db db:migrate"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@bhvr-ecom/env": "workspace:*"
+  },
+  "devDependencies": {
+    "turbo": "^2.6.3",
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@bhvr-ecom/config": "workspace:*"
+  },
+  "packageManager": "bun@1.3.4"
+}

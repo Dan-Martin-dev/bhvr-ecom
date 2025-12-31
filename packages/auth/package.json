@@ -1,0 +1,24 @@
+{
+  "name": "@bhvr-ecom/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@bhvr-ecom/config": "workspace:*"
+  },
+  "dependencies": {
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@bhvr-ecom/env": "workspace:*",
+    "@bhvr-ecom/db": "workspace:*"
+  }
+}
