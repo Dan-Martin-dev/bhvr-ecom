@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: bhvr-ecom-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bhvr_ecom
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/db/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bhvr_ecom"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bhvr-network
+
+  # Redis Cache & Sessions
+  redis:
+    image: redis:7-alpine
+    container_name: bhvr-ecom-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bhvr-network
+
+  # Backend Server (Hono API)
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: bhvr-ecom-server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/bhvr_ecom
+      - REDIS_URL=redis://redis:6379
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3001}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - MERCADO_PAGO_ACCESS_TOKEN=${MERCADO_PAGO_ACCESS_TOKEN}
+      - MERCADO_PAGO_PUBLIC_KEY=${MERCADO_PAGO_PUBLIC_KEY}
+      - MERCADO_PAGO_WEBHOOK_SECRET=${MERCADO_PAGO_WEBHOOK_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bun --version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - bhvr-network
+
+  # Frontend Web (Vite + React) - Development Mode
+  # For production, build static files and serve with nginx
+  web:
+    image: oven/bun:1
+    container_name: bhvr-ecom-web
+    restart: unless-stopped
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_SERVER_URL=${VITE_SERVER_URL:-http://localhost:3001}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "bun install && bun --filter=web dev --host 0.0.0.0"
+    depends_on:
+      - server
+    networks:
+      - bhvr-network
+
+networks:
+  bhvr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
