@@ -1,0 +1,35 @@
+{
+  "name": "@bhvr-ecom/core",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./products": {
+      "types": "./src/products/index.ts",
+      "default": "./src/products/index.ts"
+    },
+    "./cart": {
+      "types": "./src/cart/index.ts",
+      "default": "./src/cart/index.ts"
+    },
+    "./orders": {
+      "types": "./src/orders/index.ts",
+      "default": "./src/orders/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@bhvr-ecom/config": "workspace:*"
+  },
+  "dependencies": {
+    "zod": "catalog:",
+    "drizzle-orm": "^0.45.1",
+    "@bhvr-ecom/db": "workspace:*",
+    "@bhvr-ecom/validations": "workspace:*"
+  }
+}

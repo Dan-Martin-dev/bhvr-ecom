@@ -34,7 +34,6 @@
     "docker:logs": "docker-compose logs -f",
     "docker:dev": "docker-compose up --build",
     "commit": "bash scripts/lazy-git.sh"
-
   },
   "dependencies": {
     "dotenv": "catalog:",

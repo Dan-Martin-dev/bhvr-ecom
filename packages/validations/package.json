@@ -1,0 +1,36 @@
+{
+  "name": "@bhvr-ecom/validations",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./products": {
+      "types": "./src/products.ts",
+      "default": "./src/products.ts"
+    },
+    "./cart": {
+      "types": "./src/cart.ts",
+      "default": "./src/cart.ts"
+    },
+    "./orders": {
+      "types": "./src/orders.ts",
+      "default": "./src/orders.ts"
+    },
+    "./auth": {
+      "types": "./src/auth.ts",
+      "default": "./src/auth.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@bhvr-ecom/config": "workspace:*"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  }
+}
