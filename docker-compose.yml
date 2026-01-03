@@ -9,9 +9,11 @@ services:
     environment:
       POSTGRES_DB: bhvr_ecom
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Password MUST be set via POSTGRES_PASSWORD env var
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      # Expose to localhost only for security
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./packages/db/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql

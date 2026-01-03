@@ -16,7 +16,7 @@ beforeAll(() => {
   // Using the same database as development for now
   process.env.DATABASE_URL =
     process.env.DATABASE_URL ||
-    "postgresql://postgres:postgres@localhost:5432/postgres";
+    "postgresql://postgres:dev_password_change_in_prod_2026@localhost:5432/bhvr_ecom";
   
   process.env.BETTER_AUTH_SECRET =
     process.env.BETTER_AUTH_SECRET || "test-secret-key-for-testing-only";
