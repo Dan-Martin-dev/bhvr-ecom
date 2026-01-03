@@ -27,6 +27,14 @@ check: ## Run TypeScript type checking
 	@echo "$(BLUE)Checking types...$(NC)"
 	bun run check-types
 
+test: ## Run all tests
+	@echo "$(BLUE)Running tests...$(NC)"
+	bun run test
+
+test-watch: ## Run tests in watch mode
+	@echo "$(BLUE)Running tests in watch mode...$(NC)"
+	bun run test:watch
+
 ##@ Database
 
 db-push: ## Push database schema changes

@@ -28,6 +28,8 @@
     "db:generate": "turbo -F @bhvr-ecom/db db:generate",
     "db:migrate": "turbo -F @bhvr-ecom/db db:migrate",
     "db:seed": "turbo -F @bhvr-ecom/db db:seed",
+    "test": "turbo test",
+    "test:watch": "turbo test:watch",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",

@@ -20,7 +20,9 @@
     }
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "bun test --preload ./src/__tests__/setup.ts",
+    "test:watch": "bun test --watch --preload ./src/__tests__/setup.ts"
   },
   "devDependencies": {
     "typescript": "catalog:",

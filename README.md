@@ -21,6 +21,8 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 
 - [Clean Architecture Guide](./docs/clean-architecture.md) - Understand the project structure
 - [Hono RPC Guide](./docs/hono-rpc-guide.md) - **⭐ Start here for API usage**
+- [Testing Guide](./docs/testing-guide.md) - How to write and run tests
+- [Test Results](./TEST_RESULTS.md) - Current test coverage and status
 - [Database Schema](./docs/database-schema.md) - Database structure reference
 
 ## Getting Started
@@ -168,6 +170,15 @@ This project follows the **Beaver Stack** monorepo architecture:
 - `bun run dev:web`: Start only the web application
 - `bun run dev:server`: Start only the server
 - `bun run check-types`: Check TypeScript types across all apps
+
+### Testing
+
+- `bun run test`: Run all tests across the monorepo
+- `bun run test:watch`: Run tests in watch mode
+- `make test`: Quick command to run tests
+- `make test-watch`: Quick command for watch mode
+
+**Status:** 12/29 tests passing (41% coverage). See [TEST_RESULTS.md](./TEST_RESULTS.md) and [docs/testing-guide.md](./docs/testing-guide.md) for details.
 
 ### Database
 
