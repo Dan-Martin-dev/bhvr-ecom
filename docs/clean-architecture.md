@@ -8,8 +8,73 @@ This document describes the Clean Architecture implementation for the BHVR E-com
 
 ### 1. Presentation Layer (`apps/`)
 
-- **Server** (`apps/server/`): Hono API endpoints
+- **Server** (`apps/server/`): Hono API endpoints - handles HTTP concerns
 - **Web** (`apps/web/`): React frontend with TanStack Router
+
+#### Hono RPC: Type-Safe API Communication
+
+**Hono RPC** fits here as a **communication bridge** between your server and web apps:
+
+```typescript
+// Server: Define RPC routes using your validation schemas
+import { createProductSchema } from '@bhvr-ecom/validations';
+
+const route = app
+  .post('/products', async (c) => {
+    const validatedData = createProductSchema.parse(await c.req.json());
+    const product = await productUseCases.createProduct(validatedData);
+    return c.json(product);
+  });
+
+// Export RPC client types
+export type AppType = typeof route;
+```
+
+```typescript
+// Web: Type-safe API calls
+import { hc } from 'hono/client';
+import type { AppType } from '../server/src/index';
+
+const client = hc<AppType>('/api');
+const res = await client.products.$post({ 
+  name: 'New Product', 
+  price: 29.99 
+}); // Fully type-safe!
+```
+
+**Why RPC in Presentation Layer:**
+
+- Bridges server (Hono) ↔ web (React) with end-to-end type safety
+- Uses `packages/validations` schemas for request/response types
+- Keeps business logic (`packages/core`) independent of communication protocol
+- Allows swapping REST for GraphQL/RPC without changing business logic
+
+**Why separate HTTP from business logic?**
+
+The Hono server (Presentation Layer) is responsible for **HTTP-specific concerns**:
+
+- Receiving and parsing HTTP requests
+- Authentication & authorization middleware
+- Request validation and sanitization
+- Routing and URL mapping
+- Response formatting (JSON, status codes)
+- CORS, rate limiting, logging
+- Error handling and HTTP status codes
+
+While `packages/core` (Application Layer) contains **business logic**:
+
+- Product catalog management
+- Shopping cart operations
+- Order processing workflows
+- Business rules and calculations
+- Transaction management
+
+**Benefits of this separation**:
+
+- **Testability**: Business logic can be tested without HTTP mocks
+- **Flexibility**: Could swap Hono for Express/Fastify or add GraphQL/CLI interfaces
+- **Maintainability**: HTTP concerns don't pollute business logic
+- **Reusability**: Same business logic could power mobile apps, APIs, or background jobs
 
 ### 2. Application Layer (`packages/core/`)
 
@@ -142,7 +207,78 @@ apps/web ─────┼─► packages/core ──┐
 - Business logic isolated from infrastructure concerns
 - Use cases can be tested independently with mocked dependencies
 
-## Usage Examples
+## Hono RPC Integration
+
+✅ **IMPLEMENTED** - See [Hono RPC Guide](./hono-rpc-guide.md) for complete documentation.
+
+Hono RPC enhances your Clean Architecture by providing **type-safe communication** between presentation layers while leveraging your domain and application layers.
+
+### RPC in Clean Architecture Layers
+
+```mermaid
+graph TD
+    A[Presentation Layer<br/>Hono Server] --> B[Application Layer<br/>packages/core]
+    A --> C[Domain Layer<br/>packages/validations]
+    D[Presentation Layer<br/>React Web] --> B
+    D --> C
+    
+    A -.->|RPC| D
+    
+    style A fill:#e1f5fe
+    style D fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+```
+
+### Implementation Example
+
+```typescript
+// 1. Domain Layer: Define your schemas
+import { z } from 'zod';
+export const createProductSchema = z.object({
+  name: z.string(),
+  price: z.number(),
+  categoryId: z.string(),
+});
+
+// 2. Application Layer: Business logic
+export const createProduct = async (data: z.infer<typeof createProductSchema>) => {
+  // Business logic here
+  return await db.insert(products).values(data);
+};
+
+// 3. Presentation Layer (Server): RPC endpoint
+import { Hono } from 'hono';
+const app = new Hono();
+
+const routes = app
+  .post('/products', async (c) => {
+    const data = createProductSchema.parse(await c.req.json());
+    const result = await createProduct(data);
+    return c.json(result);
+  });
+
+export type AppType = typeof routes;
+
+// 4. Presentation Layer (Web): Type-safe client
+import { hc } from 'hono/client';
+const client = hc<AppType>('/api');
+
+// Fully type-safe API call with auto-complete!
+const response = await client.products.$post({
+  name: 'New Product',
+  price: 29.99,
+  categoryId: 'electronics'
+});
+```
+
+### Benefits with Clean Architecture
+
+- **Type Safety**: End-to-end types from validation schemas to frontend
+- **Layer Independence**: RPC doesn't affect business logic in `packages/core`
+- **Developer Experience**: Auto-complete and compile-time errors for API calls
+- **Maintainability**: API changes automatically propagate to frontend types
+- **Testing**: RPC client can be mocked without affecting business logic tests
 
 ### In Server Routes
 
@@ -150,13 +286,43 @@ apps/web ─────┼─► packages/core ──┐
 import { productUseCases } from '@bhvr-ecom/core';
 import { createProductSchema } from '@bhvr-ecom/validations';
 
-// API endpoint using Clean Architecture
+// Hono handles HTTP concerns: routing, request parsing, response formatting
 app.post('/api/products', async (c) => {
-  const body = await c.req.json();
-  const validatedData = createProductSchema.parse(body);
+  try {
+    // 1. HTTP parsing (Presentation Layer)
+    const body = await c.req.json();
+    
+    // 2. Input validation (Domain Layer)
+    const validatedData = createProductSchema.parse(body);
+    
+    // 3. Business logic (Application Layer)
+    const product = await productUseCases.createProduct(validatedData);
+    
+    // 4. HTTP response (Presentation Layer)
+    return c.json(product, 201);
+  } catch (error) {
+    // 5. Error handling (Presentation Layer)
+    return c.json({ error: 'Invalid product data' }, 400);
+  }
+});
+```
 
-  const product = await productUseCases.createProduct(validatedData);
-  return c.json(product);
+### Business Logic Testing (Without HTTP)
+
+```typescript
+import { productUseCases } from '@bhvr-ecom/core';
+
+// Test business logic directly - no HTTP mocks needed!
+describe('Product Use Cases', () => {
+  it('should create product with valid data', async () => {
+    const product = await productUseCases.createProduct({
+      name: 'Test Product',
+      price: 29.99,
+      categoryId: '123'
+    });
+    
+    expect(product.name).toBe('Test Product');
+  });
 });
 ```
 

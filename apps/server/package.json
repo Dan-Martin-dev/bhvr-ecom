@@ -10,13 +10,16 @@
     "start": "bun run dist/index.js"
   },
   "dependencies": {
-    "hono": "^4.8.2",
+    "@bhvr-ecom/auth": "workspace:*",
+    "@bhvr-ecom/core": "workspace:*",
+    "@bhvr-ecom/db": "workspace:*",
+    "@bhvr-ecom/env": "workspace:*",
+    "@bhvr-ecom/validations": "workspace:*",
+    "@hono/zod-validator": "^0.7.6",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@bhvr-ecom/env": "workspace:*",
-    "@bhvr-ecom/auth": "workspace:*",
-    "@bhvr-ecom/db": "workspace:*"
+    "hono": "^4.8.2",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

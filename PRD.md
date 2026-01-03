@@ -23,7 +23,7 @@
 
 ### 1.1 Vision
 
-OpenCommercium is an open-source, high-performance e-commerce boilerplate designed for developers and businesses seeking complete control over their online store infrastructure. Built on the modern BHVR stack (Bun, Hono, Vite, Redis/PostgreSQL), it prioritizes speed, developer experience, and self-hosting capabilities.
+bhvr-ecom is an open-source, high-performance e-commerce boilerplate designed for developers and businesses seeking complete control over their online store infrastructure. Built on the modern BHVR stack (Bun, Hono, Vite, Redis/PostgreSQL), it prioritizes speed, developer experience, and self-hosting capabilities.
 
 ### 1.2 Value Proposition
 

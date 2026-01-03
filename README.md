@@ -9,11 +9,19 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **TailwindCSS** - Utility-first CSS for rapid UI development
 - **shadcn/ui** - Reusable UI components
 - **Hono** - Lightweight, performant server framework
+- **Hono RPC** - Type-safe API communication (✅ Implemented!)
 - **Bun** - Runtime environment
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
 - **Authentication** - Better-Auth
 - **Turborepo** - Optimized monorepo build system
+- **Clean Architecture** - Separation of concerns with core business logic
+
+## 📚 Documentation
+
+- [Clean Architecture Guide](./docs/clean-architecture.md) - Understand the project structure
+- [Hono RPC Guide](./docs/hono-rpc-guide.md) - **⭐ Start here for API usage**
+- [Database Schema](./docs/database-schema.md) - Database structure reference
 
 ## Getting Started
 
