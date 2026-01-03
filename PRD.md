@@ -1,4 +1,4 @@
-# OpenCommercium - Product Definition Report (PDR)
+# bhvr-ecom - Product Definition Report (PDR)
 
 > A High-Performance, Self-Hosted E-Commerce Boilerplate
 
@@ -229,7 +229,7 @@ print = "yarn"
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { auth } from "@opencommercium/auth";
+import { auth } from "@bhvr-ecom/auth";
 
 const app = new Hono();
 
@@ -290,7 +290,7 @@ export default app;
 ### 3.2 Monorepo Structure
 
 ```bash
-opencommercium/
+bhvr-ecom/
 ├── apps/
 │   ├── web/                          # React storefront
 │   │   ├── src/
@@ -447,9 +447,9 @@ opencommercium/
 
 ```typescript
 // packages/core/src/orders/create-order.ts
-import { db } from "@opencommercium/db";
-import { orders, orderItems, products } from "@opencommercium/db/schema";
-import { CreateOrderInput, Order } from "@opencommercium/validations";
+import { db } from "@bhvr-ecom/db";
+import { orders, orderItems, products } from "@bhvr-ecom/db/schema";
+import { CreateOrderInput, Order } from "@bhvr-ecom/validations";
 
 interface CreateOrderDeps {
   db: typeof db;
@@ -752,12 +752,12 @@ MERCADO_PAGO_WEBHOOK_SECRET=your-webhook-secret
 // apps/server/src/routes/checkout.ts
 import { Hono } from "hono";
 import { MercadoPagoConfig, Preference } from "mercadopago";
-import { db } from "@opencommercium/db";
+import { db } from "@bhvr-ecom/db";
 import { 
   CreateOrderInput, 
   createOrderSchema 
-} from "@opencommercium/validations";
-import { env } from "@opencommercium/env/server";
+} from "@bhvr-ecom/validations";
+import { env } from "@bhvr-ecom/env/server";
 import { authMiddleware } from "../middleware/auth";
 
 const checkout = new Hono();
@@ -916,7 +916,7 @@ checkout.post("/mercadopago", authMiddleware, async (c) => {
         auto_return: "approved",
         external_reference: order.id,
         notification_url: `${env.VITE_BASE_URL}/api/webhooks/mercadopago`,
-        statement_descriptor: "OpenCommercium Store",
+        statement_descriptor: "bhvr-ecom Store",
         payment_methods: {
           excluded_payment_methods: [],
           excluded_payment_types: [],
@@ -972,10 +972,10 @@ export default checkout;
 import { Hono } from "hono";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import crypto from "node:crypto";
-import { db } from "@opencommercium/db";
-import { orders } from "@opencommercium/db/schema";
+import { db } from "@bhvr-ecom/db";
+import { orders } from "@bhvr-ecom/db/schema";
 import { eq } from "drizzle-orm";
-import { env } from "@opencommercium/env/server";
+import { env } from "@bhvr-ecom/env/server";
 
 const webhooks = new Hono();
 
@@ -1442,7 +1442,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: opencommercium-redis
+    container_name: bhvr-ecom-redis
     ports:
       - "6379:6379"
     volumes:
@@ -1553,7 +1553,7 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.web
-    container_name: opencommercium-web
+    container_name: bhvr-ecom-web
     restart: unless-stopped
     networks:
       - web
@@ -1572,11 +1572,11 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.server
-    container_name: opencommercium-server
+    container_name: bhvr-ecom-server
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/opencommercium
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/bhvr-ecom
       - REDIS_URL=redis://redis:6379
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=https://api.${DOMAIN}
@@ -1600,10 +1600,10 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: opencommercium-postgres
+    container_name: bhvr-ecom-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: opencommercium
+      POSTGRES_DB: bhvr-ecom
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
@@ -1619,7 +1619,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: opencommercium-redis
+    container_name: bhvr-ecom-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
@@ -1656,11 +1656,11 @@ SERVER_IP="${SERVER_IP:-your-server-ip}"
 SERVER_USER="${SERVER_USER:-root}"
 DOMAIN="${DOMAIN:-example.com}"
 
-echo "🚀 Deploying OpenCommercium to Hetzner..."
+echo "🚀 Deploying bhvr-ecom to Hetzner..."
 
 # 1. SSH into server and pull latest code
 ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
-  cd /opt/opencommercium
+  cd /opt/bhvr-ecom
 
   # Pull latest changes
   git pull origin main
@@ -1714,8 +1714,8 @@ BACKUP_DIR="/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 
 # PostgreSQL backup
-docker exec opencommercium-postgres \
-  pg_dump -U postgres opencommercium | gzip > "$BACKUP_DIR/db_$DATE.sql.gz"
+docker exec bhvr-ecom-postgres \
+  pg_dump -U postgres bhvr-ecom | gzip > "$BACKUP_DIR/db_$DATE.sql.gz"
 
 # Keep only last 7 days
 find $BACKUP_DIR -name "db_*.sql.gz" -mtime +7 -delete
@@ -1727,7 +1727,7 @@ find $BACKUP_DIR -name "db_*.sql.gz" -mtime +7 -delete
 **Cron job (daily at 3 AM):**
 
 ```bash
-0 3 * * * /opt/opencommercium/infrastructure/scripts/backup.sh >> /var/log/backup.log 2>&1
+0 3 * * * /opt/bhvr-ecom/infrastructure/scripts/backup.sh >> /var/log/backup.log 2>&1
 ```
 
 ---
@@ -1830,7 +1830,7 @@ ACME_EMAIL=admin@example.com
 
 # Database
 POSTGRES_PASSWORD=your-secure-password-here
-DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/opencommercium
+DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/bhvr-ecom
 
 # Redis
 REDIS_PASSWORD=your-redis-password-here
@@ -1898,4 +1898,4 @@ TRAEFIK_USERS=admin:$$apr1$$...  # htpasswd -nb admin password
 
 ---
 
-*This document is part of the OpenCommercium project. Licensed under MIT.*
+*This document is part of the bhvr-ecom project. Licensed under MIT.*
