@@ -3,6 +3,7 @@ import { env } from "@bhvr-ecom/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { HTTPException } from "hono/http-exception";
 import products from "./routes/products";
 import categories from "./routes/categories";
 import cart from "./routes/cart";
@@ -10,6 +11,32 @@ import orders from "./routes/orders";
 import type { AppEnv } from "./types";
 
 const app = new Hono<AppEnv>();
+
+// Global error handler
+app.onError((err, c) => {
+  console.error(`[Error] ${err.message}`, err.stack);
+  
+  if (err instanceof HTTPException) {
+    return c.json(
+      { error: err.message, code: "HTTP_ERROR" },
+      err.status
+    );
+  }
+  
+  // Handle Zod validation errors
+  if (err.name === "ZodError") {
+    return c.json(
+      { error: "Validation failed", code: "VALIDATION_ERROR", details: err },
+      400
+    );
+  }
+  
+  // Generic server error
+  return c.json(
+    { error: "Internal server error", code: "INTERNAL_ERROR" },
+    500
+  );
+});
 
 app.use(logger());
 app.use(

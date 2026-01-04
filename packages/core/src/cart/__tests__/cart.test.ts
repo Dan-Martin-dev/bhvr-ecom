@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll } from "bun:test";
 import { db } from "@bhvr-ecom/db";
-import { product, category, cart, cartItem } from "@bhvr-ecom/db/schema/ecommerce";
+import { product, category } from "@bhvr-ecom/db/schema/ecommerce";
 import * as cartUseCases from "../index";
 import type { AddToCartInput } from "@bhvr-ecom/validations/cart";
 
@@ -8,7 +8,6 @@ describe("Cart Use Cases", () => {
   let testProductId: string;
   let testCategoryId: string;
   const testUserId = "test-user-123";
-  const testSessionId = "test-session-456";
 
   beforeAll(async () => {
     // Create test category
@@ -19,7 +18,7 @@ describe("Cart Use Cases", () => {
         slug: "cart-test-category",
       })
       .returning();
-    testCategoryId = testCategory.id;
+    testCategoryId = testCategory!.id;
 
     // Create test product
     const [testProduct] = await db
@@ -34,7 +33,7 @@ describe("Cart Use Cases", () => {
         isActive: true,
       })
       .returning();
-    testProductId = testProduct.id;
+    testProductId = testProduct!.id;
   });
 
   describe("getOrCreateCart", () => {
@@ -83,10 +82,10 @@ describe("Cart Use Cases", () => {
 
       const result = await cartUseCases.addToCart(input, testUserId);
 
-      expect(result.id).toBeDefined();
-      expect(result.productId).toBe(testProductId);
-      expect(result.quantity).toBe(2);
-      expect(result.priceAtAdd).toBe(2999);
+      expect(result!.id).toBeDefined();
+      expect(result!.productId).toBe(testProductId);
+      expect(result!.quantity).toBe(2);
+      expect(result!.priceAtAdd).toBe(2999);
     });
 
     test("should increment quantity when adding same product again", async () => {
@@ -104,7 +103,7 @@ describe("Cart Use Cases", () => {
         "user-increment-test"
       );
 
-      expect(result.quantity).toBe(2);
+      expect(result!.quantity).toBe(2);
     });
 
     test("should throw error for inactive product", async () => {
@@ -121,7 +120,7 @@ describe("Cart Use Cases", () => {
         .returning();
 
       const input: AddToCartInput = {
-        productId: inactiveProduct.id,
+        productId: inactiveProduct!.id,
         quantity: 1,
       };
 
@@ -147,7 +146,7 @@ describe("Cart Use Cases", () => {
         .returning();
 
       const input: AddToCartInput = {
-        productId: lowStockProduct.id,
+        productId: lowStockProduct!.id,
         quantity: 5, // More than available stock
       };
 
@@ -171,11 +170,11 @@ describe("Cart Use Cases", () => {
 
       // Then update quantity
       const result = await cartUseCases.updateCartItem({
-        cartItemId: cartItemResult.id,
+        cartItemId: cartItemResult!.id,
         quantity: 5,
       });
 
-      expect(result.quantity).toBe(5);
+      expect(result!.quantity).toBe(5);
     });
 
     test("should throw error when updating to quantity exceeding stock", async () => {
@@ -196,7 +195,7 @@ describe("Cart Use Cases", () => {
 
       // Add to cart
       const addInput: AddToCartInput = {
-        productId: limitedProduct.id,
+        productId: limitedProduct!.id,
         quantity: 1,
       };
       const cartItemResult = await cartUseCases.addToCart(
@@ -207,7 +206,7 @@ describe("Cart Use Cases", () => {
       // Try to update to more than available
       expect(async () => {
         await cartUseCases.updateCartItem({
-          cartItemId: cartItemResult.id,
+          cartItemId: cartItemResult!.id,
           quantity: 10,
         });
       }).toThrow("Only 3 items available");
@@ -227,9 +226,9 @@ describe("Cart Use Cases", () => {
       );
 
       // Remove it
-      const result = await cartUseCases.removeFromCart(cartItemResult.id);
+      const result = await cartUseCases.removeFromCart(cartItemResult!.id);
 
-      expect(result.id).toBe(cartItemResult.id);
+      expect(result!.id).toBe(cartItemResult!.id);
     });
   });
 

@@ -17,7 +17,7 @@ describe("Product Use Cases", () => {
         slug: "test-category",
       })
       .returning();
-    testCategoryId = testCategory.id;
+    testCategoryId = testCategory!.id;
   });
 
   describe("createProduct", () => {
@@ -35,12 +35,12 @@ describe("Product Use Cases", () => {
       };
 
       const result = await productUseCases.createProduct(productData);
-      testProductId = result.id;
+      testProductId = result!.id;
 
-      expect(result.id).toBeDefined();
-      expect(result.name).toBe("Test Product");
-      expect(result.price).toBe(2999);
-      expect(result.categoryId).toBe(testCategoryId);
+      expect(result!.id).toBeDefined();
+      expect(result!.name).toBe("Test Product");
+      expect(result!.price).toBe(2999);
+      expect(result!.categoryId).toBe(testCategoryId);
     });
 
     test("should create product with minimal required fields", async () => {

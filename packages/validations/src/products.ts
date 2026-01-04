@@ -92,9 +92,9 @@ export const productImageSchema = z.object({
 // TYPE EXPORTS
 // ============================================================================
 
-export type CreateProductInput = z.infer<typeof createProductSchema>;
-export type UpdateProductInput = z.infer<typeof updateProductSchema>;
-export type ProductQueryInput = z.infer<typeof productQuerySchema>;
-export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
-export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
-export type ProductImageInput = z.infer<typeof productImageSchema>;
+export type CreateProductInput = z.input<typeof createProductSchema>;
+export type UpdateProductInput = z.input<typeof updateProductSchema>;
+export type ProductQueryInput = z.input<typeof productQuerySchema>;
+export type CreateCategoryInput = z.input<typeof createCategorySchema>;
+export type UpdateCategoryInput = z.input<typeof updateCategorySchema>;
+export type ProductImageInput = z.input<typeof productImageSchema>;

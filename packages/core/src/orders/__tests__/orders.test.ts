@@ -26,7 +26,7 @@ describe("Order Use Cases", () => {
         slug: "order-test-category",
       })
       .returning();
-    testCategoryId = testCategory.id;
+    testCategoryId = testCategory!.id;
 
     // Create test product
     const [testProduct] = await db
@@ -42,7 +42,7 @@ describe("Order Use Cases", () => {
         weight: 500, // 500 grams
       })
       .returning();
-    testProductId = testProduct.id;
+    testProductId = testProduct!.id;
 
     // Create test cart with items
     const [testCart] = await db
@@ -51,7 +51,7 @@ describe("Order Use Cases", () => {
         userId: testUserId,
       })
       .returning();
-    testCartId = testCart.id;
+    testCartId = testCart!.id;
 
     await db.insert(cartItem).values({
       cartId: testCartId,
@@ -68,15 +68,15 @@ describe("Order Use Cases", () => {
         discountType: "percentage",
         discountValue: 10, // 10% off
         isActive: true,
-        validFrom: new Date("2026-01-01"),
-        validUntil: new Date("2026-12-31"),
+        startsAt: new Date("2026-01-01"),
+        expiresAt: new Date("2026-12-31"),
         minimumOrder: 5000,
         maxDiscount: 5000,
         usageLimit: 100,
         usedCount: 0,
       })
       .returning();
-    testCouponCode = testCoupon.code;
+    testCouponCode = testCoupon!.code;
   });
 
   describe("createOrder", () => {
@@ -98,14 +98,14 @@ describe("Order Use Cases", () => {
 
       const result = await orderUseCases.createOrder(orderData, testUserId);
 
-      expect(result.id).toBeDefined();
-      expect(result.orderNumber).toBeDefined();
-      expect(result.orderNumber).toMatch(/^ORD-\d{4}-\d{4}$/);
-      expect(result.userId).toBe(testUserId);
-      expect(result.status).toBe("pending");
-      expect(result.subtotal).toBe(5000 * 2); // 2 items at 5000 each
-      expect(result.shippingCost).toBeGreaterThan(0);
-      expect(result.total).toBeGreaterThan(result.subtotal);
+      expect(result!.id).toBeDefined();
+      expect(result!.orderNumber).toBeDefined();
+      expect(result!.orderNumber).toMatch(/^ORD-\d{4}-\d{4}$/);
+      expect(result!.userId).toBe(testUserId);
+      expect(result!.status).toBe("pending");
+      expect(result!.subtotal).toBe(5000 * 2); // 2 items at 5000 each
+      expect(result!.shippingCost).toBeGreaterThan(0);
+      expect(result!.total).toBeGreaterThan(result!.subtotal);
     });
 
     test("should apply coupon discount to order", async () => {
@@ -116,14 +116,14 @@ describe("Order Use Cases", () => {
         .returning();
 
       await db.insert(cartItem).values({
-        cartId: newCart.id,
+        cartId: newCart!.id,
         productId: testProductId,
         quantity: 3,
         priceAtAdd: 5000,
       });
 
       const orderData: CreateOrderInput = {
-        cartId: newCart.id,
+        cartId: newCart!.id,
         shippingAddress: {
           firstName: "Jane",
           lastName: "Smith",
