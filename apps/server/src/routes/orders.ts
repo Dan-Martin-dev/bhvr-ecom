@@ -1,27 +1,17 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { createOrderSchema } from "@bhvr-ecom/validations";
+import { createOrderSchema, orderQuerySchema } from "@bhvr-ecom/validations";
 import * as orderUseCases from "@bhvr-ecom/core/orders";
+import { authMiddleware } from "../middleware/auth";
+import type { AppEnv } from "../types";
 
-// TODO: Replace with actual auth middleware to get userId
-const getUserId = (c: any) => {
-  return c.req.header("x-user-id") || "test-user-id";
-};
-
-const orders = new Hono()
-  .get("/", async (c) => {
-    const userId = getUserId(c);
-    const page = Number(c.req.query("page")) || 1;
-    const limit = Number(c.req.query("limit")) || 20;
-    const status = c.req.query("status") as any;
+const orders = new Hono<AppEnv>()
+  .use("/*", authMiddleware)
+  .get("/", zValidator("query", orderQuerySchema), async (c) => {
+    const user = c.get("user");
+    const query = c.req.valid("query");
     
-    const result = await orderUseCases.getUserOrders(userId, {
-      page,
-      limit,
-      sortBy: "createdAt",
-      sortOrder: "desc",
-      status,
-    });
+    const result = await orderUseCases.getUserOrders(user.id, query);
     return c.json(result);
   })
   .get("/:id", async (c) => {
@@ -35,10 +25,10 @@ const orders = new Hono()
     return c.json(result);
   })
   .post("/", zValidator("json", createOrderSchema), async (c) => {
-    const userId = getUserId(c);
+    const user = c.get("user");
     const data = c.req.valid("json");
     
-    const result = await orderUseCases.createOrder(data, userId);
+    const result = await orderUseCases.createOrder(data, user.id);
     
     return c.json(result, 201);
   });

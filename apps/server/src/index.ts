@@ -7,8 +7,9 @@ import products from "./routes/products";
 import categories from "./routes/categories";
 import cart from "./routes/cart";
 import orders from "./routes/orders";
+import type { AppEnv } from "./types";
 
-const app = new Hono();
+const app = new Hono<AppEnv>();
 
 app.use(logger());
 app.use(

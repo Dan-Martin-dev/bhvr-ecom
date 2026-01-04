@@ -1,8 +1,9 @@
 import { hc } from "hono/client";
 import type { AppType } from "../../../server/src/index";
+import { env } from "@bhvr-ecom/env/web";
 
 // Create type-safe RPC client
-export const api = hc<AppType>("/");
+export const api = hc<AppType>(env.VITE_SERVER_URL);
 
 // Example usage in components:
 // 

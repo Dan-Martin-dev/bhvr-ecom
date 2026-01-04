@@ -3,34 +3,15 @@ import { zValidator } from "@hono/zod-validator";
 import {
   createProductSchema,
   updateProductSchema,
+  productQuerySchema,
 } from "@bhvr-ecom/validations";
 import * as productUseCases from "@bhvr-ecom/core/products";
+import type { AppEnv } from "../types";
 
-const products = new Hono()
-  .get("/", async (c) => {
-    const page = Number(c.req.query("page")) || 1;
-    const limit = Number(c.req.query("limit")) || 20;
-    const search = c.req.query("search");
-    const categoryId = c.req.query("categoryId");
-    const isActive = c.req.query("isActive") === "true" ? true : undefined;
-    const isFeatured = c.req.query("isFeatured") === "true" ? true : undefined;
-    const minPrice = c.req.query("minPrice") ? Number(c.req.query("minPrice")) : undefined;
-    const maxPrice = c.req.query("maxPrice") ? Number(c.req.query("maxPrice")) : undefined;
-    const sortBy = (c.req.query("sortBy") as any) || "createdAt";
-    const sortOrder = (c.req.query("sortOrder") as any) || "desc";
-
-    const result = await productUseCases.getProducts({
-      page,
-      limit,
-      search,
-      categoryId,
-      isActive,
-      isFeatured,
-      minPrice,
-      maxPrice,
-      sortBy,
-      sortOrder,
-    });
+const products = new Hono<AppEnv>()
+  .get("/", zValidator("query", productQuerySchema), async (c) => {
+    const query = c.req.valid("query");
+    const result = await productUseCases.getProducts(query);
     return c.json(result);
   })
   .get("/:id", async (c) => {
