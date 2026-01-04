@@ -95,7 +95,7 @@ clean: ## Clean build artifacts and caches
 	rm -rf packages/*/dist
 	rm -rf packages/*/.turbo
 
-git-commit: ## Quick commit with lazy-git script
+commit: ## Quick commit with lazy-git script
 	@echo "$(BLUE)Running lazy-git...$(NC)"
 	bash scripts/lazy-git.sh
 
