@@ -4,6 +4,26 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 
 ## Features
 
+### ✅ Completed E-Commerce Features
+
+- **Product Catalog** - Browse products with search, filters, and pagination
+- **Product Details** - Individual product pages with images and add-to-cart
+- **Shopping Cart** - Full cart management with quantity controls
+- **User Authentication** - Better-Auth integration with session management
+- **Checkout Flow** - Multi-step checkout with shipping address and payment method
+- **Mercado Pago Integration** - Complete payment processing for Argentina/LATAM
+  - Payment preferences creation
+  - Webhook handling for payment notifications
+  - Order status updates based on payment status
+- **Order Management** - Complete order history and tracking
+  - Customer order list and detail views
+  - Admin order management with status updates
+  - Tracking number and URL support
+- **Admin Dashboard** - Order management interface for administrators
+- **Redis Caching** - Session and cart caching for performance
+
+### 🛠️ Technical Stack
+
 - **TypeScript** - For type safety and improved developer experience
 - **TanStack Router** - File-based routing with full type safety
 - **TailwindCSS** - Utility-first CSS for rapid UI development
@@ -13,7 +33,8 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Bun** - Runtime environment
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
+- **Redis** - Caching and session storage
+- **Better Auth** - Authentication and session management
 - **Turborepo** - Optimized monorepo build system
 - **Clean Architecture** - Separation of concerns with core business logic
 
@@ -26,6 +47,45 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - [Database Schema](./docs/database-schema.md) - Database structure reference
 
 ## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh) runtime installed
+- PostgreSQL database (or use Docker for easy setup)
+- Mercado Pago account (for payment processing)
+
+### Environment Variables
+
+Create `.env` files in the following locations:
+
+**`apps/server/.env`:**
+
+```env
+# Database
+DATABASE_URL="postgresql://postgres:password@localhost:5432/bhvr_ecom"
+
+# Better Auth
+BETTER_AUTH_SECRET="your-super-secret-key-min-32-chars"  # Generate with: openssl rand -base64 32
+BETTER_AUTH_URL="http://localhost:3001"
+
+# CORS
+CORS_ORIGIN="http://localhost:3000"
+
+# Node Environment
+NODE_ENV="development"
+
+# Mercado Pago (Get from: https://www.mercadopago.com.ar/developers/panel/app)
+MERCADO_PAGO_ACCESS_TOKEN="APP_USR-XXXX-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+MERCADO_PAGO_PUBLIC_KEY="APP_USR-XXXX-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+```
+
+**`apps/web/.env`:**
+
+```env
+VITE_API_URL="http://localhost:3001"
+```
+
+### Installation
 
 First, install the dependencies:
 

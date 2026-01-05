@@ -9,6 +9,8 @@ export const env = createEnv({
     BETTER_AUTH_URL: z.url(),
     CORS_ORIGIN: z.url(),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    MERCADO_PAGO_ACCESS_TOKEN: z.string().optional(),
+    MERCADO_PAGO_PUBLIC_KEY: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

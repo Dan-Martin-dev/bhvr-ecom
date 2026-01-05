@@ -1,10 +1,10 @@
 # Core E-Commerce Implementation Guide
 
-> Implementation of Product Catalog, Shopping Cart, and Redis Integration
+> Complete E-Commerce Platform with Checkout, Payments, and Order Management
 
 **Date:** January 5, 2026
 **Status:** ✅ Complete
-**Phase:** 2 - Core E-Commerce
+**Phase:** 3 - Checkout & Payments + Admin
 
 ---
 
@@ -13,11 +13,14 @@
 1. [Overview](#1-overview)
 2. [Database Schema](#2-database-schema)
 3. [Backend Implementation](#3-backend-implementation)
-4. [Frontend Implementation](#5-frontend-implementation)
-5. [Redis Integration](#6-redis-integration)
-6. [API Endpoints](#7-api-endpoints)
-7. [Testing](#8-testing)
-8. [Deployment](#9-deployment)
+4. [Frontend Implementation](#4-frontend-implementation)
+5. [Redis Integration](#5-redis-integration)
+6. [API Endpoints](#6-api-endpoints)
+7. [Checkout & Payment Implementation](#7-checkout--payment-implementation)
+8. [Order Management](#8-order-management)
+9. [Admin Dashboard](#9-admin-dashboard)
+10. [Testing](#10-testing)
+11. [Deployment](#11-deployment)
 
 ---
 
@@ -30,6 +33,10 @@ This document covers the implementation of the core e-commerce features for the 
 - **Product Catalog**: Full product listing with search, filters, and pagination
 - **Product Details**: Individual product pages with images and add-to-cart
 - **Shopping Cart**: Complete cart management with quantity controls
+- **Checkout Flow**: Multi-step checkout with shipping address and payment
+- **Mercado Pago Integration**: Payment processing with webhooks and status updates
+- **Order Management**: Complete order lifecycle with status tracking
+- **Admin Dashboard**: Order management interface for administrators
 - **Redis Integration**: Caching and session management
 - **Type-Safe APIs**: Full TypeScript coverage across all layers
 
@@ -992,7 +999,822 @@ interface ProductQueryInput {
 
 ---
 
-## 7. Testing
+## 7. Checkout & Payment Implementation
+
+### Overview
+
+The checkout system implements a complete e-commerce payment flow using Mercado Pago with the following components:
+
+- **Multi-step Checkout UI**: React-based form with shipping address collection
+- **Mercado Pago Integration**: Payment preference creation and webhook handling
+- **Order Management**: Complete order lifecycle with status tracking
+- **Admin Dashboard**: Order management interface for administrators
+
+### Database Schema Extensions
+
+```sql
+-- Orders table
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number VARCHAR(50) UNIQUE NOT NULL,
+  user_id UUID NOT NULL REFERENCES users(id),
+  status order_status NOT NULL DEFAULT 'pending',
+  total_amount INTEGER NOT NULL, -- in centavos
+  shipping_amount INTEGER NOT NULL DEFAULT 0,
+  shipping_address JSONB NOT NULL,
+  payment_id VARCHAR(255),
+  payment_status VARCHAR(50),
+  tracking_number VARCHAR(255),
+  internal_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Order items table
+CREATE TABLE order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id),
+  quantity INTEGER NOT NULL,
+  unit_price INTEGER NOT NULL, -- in centavos
+  total_price INTEGER NOT NULL, -- in centavos
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Order status enum
+CREATE TYPE order_status AS ENUM (
+  'pending',
+  'paid',
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
+  'refunded'
+);
+```
+
+### Checkout Flow
+
+```
+1. Cart Review → 2. Shipping Address → 3. Payment → 4. Confirmation
+     ↓                ↓                     ↓              ↓
+   /shop/cart     /shop/checkout       MercadoPago    /shop/order/success
+```
+
+### Backend Implementation
+
+#### Checkout API Route
+
+```typescript
+// apps/server/src/routes/checkout.ts
+import { Hono } from "hono";
+import { authMiddleware } from "@bhvr-ecom/auth";
+import { db } from "@bhvr-ecom/db";
+import { MercadoPagoConfig, Preference } from "mercadopago";
+
+const checkout = new Hono();
+
+// Generate unique order number (YYYY-NNNNNN)
+function generateOrderNumber(): string {
+  const year = new Date().getFullYear();
+  const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+  return `${year}-${random}`;
+}
+
+// Calculate shipping cost based on zone
+function calculateShippingCost(zone: string, subtotal: number): number {
+  const shippingRates = {
+    'caba': 150000,      // $1,500 ARS
+    'gba': 200000,       // $2,000 ARS
+    'interior': 300000,  // $3,000 ARS
+  };
+  return shippingRates[zone as keyof typeof shippingRates] || 300000;
+}
+
+checkout.post("/mercadopago", authMiddleware, async (c) => {
+  try {
+    const user = c.get("user");
+    const body = await c.req.json();
+    const { shippingAddress } = body;
+
+    // Get cart items
+    const cart = await db.query.carts.findFirst({
+      where: eq(carts.userId, user.id),
+      with: { items: { with: { product: true } } }
+    });
+
+    if (!cart?.items.length) {
+      return c.json({ error: "Cart is empty" }, 400);
+    }
+
+    // Calculate totals
+    const subtotal = cart.items.reduce((sum, item) => 
+      sum + (item.product.price * item.quantity), 0
+    );
+    const shipping = calculateShippingCost(shippingAddress.zone, subtotal);
+    const total = subtotal + shipping;
+
+    // Create order
+    const orderNumber = generateOrderNumber();
+    const [order] = await db.insert(orders).values({
+      orderNumber,
+      userId: user.id,
+      totalAmount: total,
+      shippingAmount: shipping,
+      shippingAddress,
+      status: 'pending'
+    }).returning();
+
+    // Create order items
+    const orderItems = cart.items.map(item => ({
+      orderId: order.id,
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPrice: item.product.price,
+      totalPrice: item.product.price * item.quantity
+    }));
+    await db.insert(orderItemsTable).values(orderItems);
+
+    // Create Mercado Pago preference
+    const client = new MercadoPagoConfig({ 
+      accessToken: process.env.MP_ACCESS_TOKEN! 
+    });
+    const preference = new Preference(client);
+
+    const preferenceData = {
+      items: cart.items.map(item => ({
+        id: item.productId,
+        title: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.product.price / 100, // Convert centavos to ARS
+        currency_id: "ARS"
+      })),
+      payer: {
+        name: shippingAddress.firstName,
+        surname: shippingAddress.lastName,
+        email: user.email,
+      },
+      back_urls: {
+        success: `${process.env.VITE_BASE_URL}/shop/order/success?order=${orderNumber}`,
+        failure: `${process.env.VITE_BASE_URL}/shop/order/failure?order=${orderNumber}`,
+        pending: `${process.env.VITE_BASE_URL}/shop/order/pending?order=${orderNumber}`,
+      },
+      external_reference: order.id,
+      notification_url: `${process.env.VITE_BASE_URL}/api/webhooks/mercadopago`,
+    };
+
+    const response = await preference.create({ body: preferenceData });
+
+    // Update order with payment ID
+    await db.update(orders)
+      .set({ paymentId: response.id })
+      .where(eq(orders.id, order.id));
+
+    return c.json({
+      preferenceId: response.id,
+      orderNumber,
+      total: total / 100 // Convert to ARS for display
+    });
+
+  } catch (error) {
+    console.error("Checkout error:", error);
+    return c.json({ error: "Failed to create checkout" }, 500);
+  }
+});
+
+export default checkout;
+```
+
+#### Webhook Handler
+
+```typescript
+// apps/server/src/routes/webhooks.ts
+import { Hono } from "hono";
+import { db } from "@bhvr-ecom/db";
+
+const webhooks = new Hono();
+
+webhooks.post("/mercadopago", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { data, type } = body;
+
+    if (type === "payment") {
+      const paymentId = data.id;
+
+      // Get payment details from Mercado Pago
+      const client = new MercadoPagoConfig({ 
+        accessToken: process.env.MP_ACCESS_TOKEN! 
+      });
+      const payment = await new Payment(client).get({ id: paymentId });
+
+      // Map Mercado Pago status to order status
+      const statusMap = {
+        'approved': 'paid',
+        'pending': 'pending',
+        'rejected': 'cancelled',
+        'cancelled': 'cancelled',
+        'refunded': 'refunded'
+      };
+
+      const orderStatus = statusMap[payment.status as keyof typeof statusMap] || 'pending';
+
+      // Update order
+      await db.update(orders)
+        .set({ 
+          status: orderStatus,
+          paymentStatus: payment.status,
+          updatedAt: new Date()
+        })
+        .where(eq(orders.paymentId, paymentId.toString()));
+
+      return c.json({ received: true });
+    }
+
+    return c.json({ received: true });
+
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return c.json({ error: "Webhook processing failed" }, 500);
+  }
+});
+
+export default webhooks;
+```
+
+### Frontend Implementation
+
+#### Checkout Page Component
+
+```typescript
+// apps/web/src/routes/shop.checkout.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { api } from "~/lib/api";
+import { useCart } from "~/lib/cart";
+
+type CheckoutStep = "shipping" | "payment" | "review";
+
+export const Route = createFileRoute("/shop/checkout")({
+  component: CheckoutPage,
+});
+
+function CheckoutPage() {
+  const [step, setStep] = useState<CheckoutStep>("shipping");
+  const [shippingAddress, setShippingAddress] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    province: "",
+    zipCode: "",
+    zone: "caba" as "caba" | "gba" | "interior"
+  });
+
+  const { data: cart } = useQuery({
+    queryKey: ["cart"],
+    queryFn: api.cart.get,
+  });
+
+  const checkoutMutation = useMutation({
+    mutationFn: (data: { shippingAddress: typeof shippingAddress }) =>
+      api.checkout.createMercadoPago(data),
+    onSuccess: (data) => {
+      // Redirect to Mercado Pago checkout
+      window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${data.preferenceId}`;
+    },
+  });
+
+  const handleSubmit = () => {
+    checkoutMutation.mutate({ shippingAddress });
+  };
+
+  if (!cart?.items.length) {
+    return <div>Your cart is empty</div>;
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Checkout</h1>
+        <div className="flex space-x-4 mt-4">
+          {["shipping", "payment", "review"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setStep(s as CheckoutStep)}
+              className={`px-4 py-2 rounded ${
+                step === s ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {step === "shipping" && (
+        <ShippingForm
+          address={shippingAddress}
+          onChange={setShippingAddress}
+          onNext={() => setStep("payment")}
+        />
+      )}
+
+      {step === "payment" && (
+        <PaymentReview
+          cart={cart}
+          address={shippingAddress}
+          onBack={() => setStep("shipping")}
+          onSubmit={handleSubmit}
+          isLoading={checkoutMutation.isPending}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+#### Order Confirmation Pages
+
+```typescript
+// apps/web/src/routes/shop.order.success.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "~/lib/api";
+
+export const Route = createFileRoute("/shop/order/success")({
+  component: OrderSuccessPage,
+  validateSearch: (search) => ({
+    order: search.order as string,
+  }),
+});
+
+function OrderSuccessPage() {
+  const { order: orderNumber } = Route.useSearch();
+
+  const { data: order } = useQuery({
+    queryKey: ["order", orderNumber],
+    queryFn: () => api.orders.getByNumber(orderNumber),
+    enabled: !!orderNumber,
+  });
+
+  return (
+    <div className="max-w-2xl mx-auto p-6 text-center">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-8">
+        <h1 className="text-2xl font-bold text-green-800 mb-4">
+          ¡Pedido Confirmado!
+        </h1>
+        <p className="text-green-700 mb-4">
+          Tu pedido #{order?.orderNumber} ha sido procesado exitosamente.
+        </p>
+        {order && (
+          <div className="text-left bg-white p-4 rounded border">
+            <h3 className="font-semibold mb-2">Detalles del Pedido</h3>
+            <p><strong>Total:</strong> ${(order.totalAmount / 100).toFixed(2)}</p>
+            <p><strong>Estado:</strong> {order.status}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 8. Order Management
+
+### User Order History
+
+```typescript
+// apps/web/src/routes/dashboard.orders.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "~/lib/api";
+import { Link } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/dashboard/orders")({
+  component: OrdersPage,
+});
+
+function OrdersPage() {
+  const { data: orders } = useQuery({
+    queryKey: ["orders"],
+    queryFn: api.orders.list,
+  });
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Mis Pedidos</h1>
+      
+      <div className="space-y-4">
+        {orders?.map((order) => (
+          <div key={order.id} className="border rounded-lg p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold">Pedido #{order.orderNumber}</h3>
+                <p className="text-sm text-gray-600">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </p>
+                <p className="text-sm">
+                  Estado: <span className="font-medium">{order.status}</span>
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold">
+                  ${(order.totalAmount / 100).toFixed(2)}
+                </p>
+                <Link 
+                  to="/dashboard/orders/$orderId" 
+                  params={{ orderId: order.id }}
+                  className="text-blue-600 hover:underline text-sm"
+                >
+                  Ver Detalles
+                </Link>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### Order Detail View
+
+```typescript
+// apps/web/src/routes/dashboard.orders.$orderId.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "~/lib/api";
+
+export const Route = createFileRoute("/dashboard/orders/$orderId")({
+  component: OrderDetailPage,
+});
+
+function OrderDetailPage() {
+  const { orderId } = Route.useParams();
+  
+  const { data: order } = useQuery({
+    queryKey: ["order", orderId],
+    queryFn: () => api.orders.get(orderId),
+    enabled: !!orderId,
+  });
+
+  if (!order) return <div>Loading...</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Pedido #{order.orderNumber}</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold mb-2">Estado del Pedido</h3>
+            <p className="text-lg">{order.status}</p>
+            {order.trackingNumber && (
+              <p className="text-sm text-gray-600">
+                Número de seguimiento: {order.trackingNumber}
+              </p>
+            )}
+          </div>
+          
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold mb-2">Dirección de Envío</h3>
+            <p>{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
+            <p>{order.shippingAddress.address}</p>
+            <p>{order.shippingAddress.city}, {order.shippingAddress.province}</p>
+            <p>{order.shippingAddress.zipCode}</p>
+          </div>
+        </div>
+        
+        <div className="border rounded-lg p-4">
+          <h3 className="font-semibold mb-2">Productos</h3>
+          <div className="space-y-2">
+            {order.items?.map((item) => (
+              <div key={item.id} className="flex justify-between">
+                <span>{item.product.name} x{item.quantity}</span>
+                <span>${(item.totalPrice / 100).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+          <hr className="my-2" />
+          <div className="flex justify-between font-semibold">
+            <span>Total</span>
+            <span>${(order.totalAmount / 100).toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 9. Admin Dashboard
+
+### Admin Order List
+
+```typescript
+// apps/web/src/routes/dashboard.admin.orders.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "~/lib/api";
+import { Link } from "@tanstack/react-router";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+
+export const Route = createFileRoute("/dashboard/admin/orders")({
+  component: AdminOrdersPage,
+});
+
+function AdminOrdersPage() {
+  const queryClient = useQueryClient();
+  
+  const { data: orders } = useQuery({
+    queryKey: ["admin", "orders"],
+    queryFn: api.admin.orders.list,
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: string; status: string }) =>
+      api.admin.orders.updateStatus(orderId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+    },
+  });
+
+  const statusOptions = [
+    { value: "pending", label: "Pendiente" },
+    { value: "paid", label: "Pagado" },
+    { value: "processing", label: "Procesando" },
+    { value: "shipped", label: "Enviado" },
+    { value: "delivered", label: "Entregado" },
+    { value: "cancelled", label: "Cancelado" },
+  ];
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Administrar Pedidos</h1>
+      
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Pedido
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Cliente
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Fecha
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {orders?.map((order) => (
+              <tr key={order.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    #{order.orderNumber}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {order.user.email}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    ${(order.totalAmount / 100).toFixed(2)}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Select
+                    value={order.status}
+                    onValueChange={(value) =>
+                      updateStatusMutation.mutate({ orderId: order.id, status: value })
+                    }
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <Link
+                    to="/dashboard/admin/orders/$orderId"
+                    params={{ orderId: order.id }}
+                    className="text-blue-600 hover:text-blue-900"
+                  >
+                    Ver Detalles
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+```
+
+### Admin Order Detail
+
+```typescript
+// apps/web/src/routes/dashboard.admin.orders.$orderId.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "~/lib/api";
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+
+export const Route = createFileRoute("/dashboard/admin/orders/$orderId")({
+  component: AdminOrderDetailPage,
+});
+
+function AdminOrderDetailPage() {
+  const { orderId } = Route.useParams();
+  const queryClient = useQueryClient();
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [internalNotes, setInternalNotes] = useState("");
+
+  const { data: order } = useQuery({
+    queryKey: ["admin", "order", orderId],
+    queryFn: () => api.admin.orders.get(orderId),
+    enabled: !!orderId,
+  });
+
+  const updateOrderMutation = useMutation({
+    mutationFn: (data: { trackingNumber?: string; internalNotes?: string; status?: string }) =>
+      api.admin.orders.update(orderId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "order", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+    },
+  });
+
+  const handleSave = () => {
+    updateOrderMutation.mutate({
+      trackingNumber: trackingNumber || undefined,
+      internalNotes: internalNotes || undefined,
+    });
+  };
+
+  if (!order) return <div>Loading...</div>;
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Pedido #{order.orderNumber}</h1>
+        <div className="text-sm text-gray-500">
+          Creado: {new Date(order.createdAt).toLocaleDateString()}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Order Details */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Productos</h3>
+            <div className="space-y-3">
+              {order.items?.map((item) => (
+                <div key={item.id} className="flex justify-between items-center border-b pb-2">
+                  <div>
+                    <p className="font-medium">{item.product.name}</p>
+                    <p className="text-sm text-gray-600">Cantidad: {item.quantity}</p>
+                  </div>
+                  <p className="font-semibold">${(item.totalPrice / 100).toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Total</span>
+                <span>${(order.totalAmount / 100).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Dirección de Envío</h3>
+            <div className="text-sm space-y-1">
+              <p><strong>Nombre:</strong> {order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
+              <p><strong>Email:</strong> {order.user.email}</p>
+              <p><strong>Teléfono:</strong> {order.shippingAddress.phone}</p>
+              <p><strong>Dirección:</strong> {order.shippingAddress.address}</p>
+              <p><strong>Ciudad:</strong> {order.shippingAddress.city}, {order.shippingAddress.province}</p>
+              <p><strong>Código Postal:</strong> {order.shippingAddress.zipCode}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Admin Controls */}
+        <div className="space-y-6">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Estado del Pedido</h3>
+            <Select
+              value={order.status}
+              onValueChange={(value) =>
+                updateOrderMutation.mutate({ status: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pendiente</SelectItem>
+                <SelectItem value="paid">Pagado</SelectItem>
+                <SelectItem value="processing">Procesando</SelectItem>
+                <SelectItem value="shipped">Enviado</SelectItem>
+                <SelectItem value="delivered">Entregado</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+                <SelectItem value="refunded">Reembolsado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Información de Envío</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Número de Seguimiento
+                </label>
+                <Input
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="Ingrese número de seguimiento"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notas Internas
+                </label>
+                <Textarea
+                  value={internalNotes}
+                  onChange={(e) => setInternalNotes(e.target.value)}
+                  placeholder="Notas internas del pedido"
+                  rows={3}
+                />
+              </div>
+              <Button 
+                onClick={handleSave}
+                disabled={updateOrderMutation.isPending}
+                className="w-full"
+              >
+                {updateOrderMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Información de Pago</h3>
+            <div className="text-sm space-y-1">
+              <p><strong>ID de Pago:</strong> {order.paymentId || "N/A"}</p>
+              <p><strong>Estado de Pago:</strong> {order.paymentStatus || "N/A"}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 10. Testing
 
 ### Unit Tests
 
@@ -1340,15 +2162,15 @@ logger.error({ err: error, cartId: "789" }, "Failed to update cart");
 
 ## 11. Next Steps
 
-### Phase 3: Checkout & Payments
-- [ ] Checkout flow UI (address collection, shipping options)
-- [ ] Mercado Pago integration (preference creation, webhooks)
-- [ ] Order creation and confirmation
-- [ ] Email notifications
+### ✅ Phase 3: Checkout & Payments (Completed)
+- [x] Checkout flow UI (address collection, shipping options)
+- [x] Mercado Pago integration (preference creation, webhooks)
+- [x] Order creation and confirmation
+- [x] Order status tracking and management
 
 ### Phase 4: Admin Dashboard
+- [x] Order management and status updates (Completed)
 - [ ] Product management interface
-- [ ] Order management and status updates
 - [ ] Customer management
 - [ ] Sales analytics and reporting
 
@@ -1357,6 +2179,7 @@ logger.error({ err: error, cartId: "789" }, "Failed to update cart");
 - [ ] SSL/TLS configuration with Traefik
 - [ ] Backup and recovery procedures
 - [ ] Performance monitoring and alerting
+- [ ] Email notifications for orders
 
 ---
 

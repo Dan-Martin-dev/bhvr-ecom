@@ -14,8 +14,16 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopProductsRouteImport } from './routes/shop.products'
+import { Route as ShopCheckoutRouteImport } from './routes/shop.checkout'
 import { Route as ShopCartRouteImport } from './routes/shop.cart'
+import { Route as DashboardOrdersRouteImport } from './routes/dashboard.orders'
 import { Route as ShopProductsSlugRouteImport } from './routes/shop.products.$slug'
+import { Route as ShopOrderSuccessRouteImport } from './routes/shop.order.success'
+import { Route as ShopOrderPendingRouteImport } from './routes/shop.order.pending'
+import { Route as ShopOrderFailureRouteImport } from './routes/shop.order.failure'
+import { Route as DashboardOrdersOrderIdRouteImport } from './routes/dashboard.orders.$orderId'
+import { Route as DashboardAdminOrdersRouteImport } from './routes/dashboard.admin.orders'
+import { Route as DashboardAdminOrdersOrderIdRouteImport } from './routes/dashboard.admin.orders.$orderId'
 
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
@@ -42,44 +50,109 @@ const ShopProductsRoute = ShopProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => ShopRoute,
 } as any)
+const ShopCheckoutRoute = ShopCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => ShopRoute,
+} as any)
 const ShopCartRoute = ShopCartRouteImport.update({
   id: '/cart',
   path: '/cart',
   getParentRoute: () => ShopRoute,
+} as any)
+const DashboardOrdersRoute = DashboardOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const ShopProductsSlugRoute = ShopProductsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => ShopProductsRoute,
 } as any)
+const ShopOrderSuccessRoute = ShopOrderSuccessRouteImport.update({
+  id: '/order/success',
+  path: '/order/success',
+  getParentRoute: () => ShopRoute,
+} as any)
+const ShopOrderPendingRoute = ShopOrderPendingRouteImport.update({
+  id: '/order/pending',
+  path: '/order/pending',
+  getParentRoute: () => ShopRoute,
+} as any)
+const ShopOrderFailureRoute = ShopOrderFailureRouteImport.update({
+  id: '/order/failure',
+  path: '/order/failure',
+  getParentRoute: () => ShopRoute,
+} as any)
+const DashboardOrdersOrderIdRoute = DashboardOrdersOrderIdRouteImport.update({
+  id: '/$orderId',
+  path: '/$orderId',
+  getParentRoute: () => DashboardOrdersRoute,
+} as any)
+const DashboardAdminOrdersRoute = DashboardAdminOrdersRouteImport.update({
+  id: '/admin/orders',
+  path: '/admin/orders',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAdminOrdersOrderIdRoute =
+  DashboardAdminOrdersOrderIdRouteImport.update({
+    id: '/$orderId',
+    path: '/$orderId',
+    getParentRoute: () => DashboardAdminOrdersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/shop': typeof ShopRouteWithChildren
+  '/dashboard/orders': typeof DashboardOrdersRouteWithChildren
   '/shop/cart': typeof ShopCartRoute
+  '/shop/checkout': typeof ShopCheckoutRoute
   '/shop/products': typeof ShopProductsRouteWithChildren
+  '/dashboard/admin/orders': typeof DashboardAdminOrdersRouteWithChildren
+  '/dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
+  '/shop/order/failure': typeof ShopOrderFailureRoute
+  '/shop/order/pending': typeof ShopOrderPendingRoute
+  '/shop/order/success': typeof ShopOrderSuccessRoute
   '/shop/products/$slug': typeof ShopProductsSlugRoute
+  '/dashboard/admin/orders/$orderId': typeof DashboardAdminOrdersOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/shop': typeof ShopRouteWithChildren
+  '/dashboard/orders': typeof DashboardOrdersRouteWithChildren
   '/shop/cart': typeof ShopCartRoute
+  '/shop/checkout': typeof ShopCheckoutRoute
   '/shop/products': typeof ShopProductsRouteWithChildren
+  '/dashboard/admin/orders': typeof DashboardAdminOrdersRouteWithChildren
+  '/dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
+  '/shop/order/failure': typeof ShopOrderFailureRoute
+  '/shop/order/pending': typeof ShopOrderPendingRoute
+  '/shop/order/success': typeof ShopOrderSuccessRoute
   '/shop/products/$slug': typeof ShopProductsSlugRoute
+  '/dashboard/admin/orders/$orderId': typeof DashboardAdminOrdersOrderIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/shop': typeof ShopRouteWithChildren
+  '/dashboard/orders': typeof DashboardOrdersRouteWithChildren
   '/shop/cart': typeof ShopCartRoute
+  '/shop/checkout': typeof ShopCheckoutRoute
   '/shop/products': typeof ShopProductsRouteWithChildren
+  '/dashboard/admin/orders': typeof DashboardAdminOrdersRouteWithChildren
+  '/dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
+  '/shop/order/failure': typeof ShopOrderFailureRoute
+  '/shop/order/pending': typeof ShopOrderPendingRoute
+  '/shop/order/success': typeof ShopOrderSuccessRoute
   '/shop/products/$slug': typeof ShopProductsSlugRoute
+  '/dashboard/admin/orders/$orderId': typeof DashboardAdminOrdersOrderIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,32 +161,56 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/shop'
+    | '/dashboard/orders'
     | '/shop/cart'
+    | '/shop/checkout'
     | '/shop/products'
+    | '/dashboard/admin/orders'
+    | '/dashboard/orders/$orderId'
+    | '/shop/order/failure'
+    | '/shop/order/pending'
+    | '/shop/order/success'
     | '/shop/products/$slug'
+    | '/dashboard/admin/orders/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
     | '/login'
     | '/shop'
+    | '/dashboard/orders'
     | '/shop/cart'
+    | '/shop/checkout'
     | '/shop/products'
+    | '/dashboard/admin/orders'
+    | '/dashboard/orders/$orderId'
+    | '/shop/order/failure'
+    | '/shop/order/pending'
+    | '/shop/order/success'
     | '/shop/products/$slug'
+    | '/dashboard/admin/orders/$orderId'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/login'
     | '/shop'
+    | '/dashboard/orders'
     | '/shop/cart'
+    | '/shop/checkout'
     | '/shop/products'
+    | '/dashboard/admin/orders'
+    | '/dashboard/orders/$orderId'
+    | '/shop/order/failure'
+    | '/shop/order/pending'
+    | '/shop/order/success'
     | '/shop/products/$slug'
+    | '/dashboard/admin/orders/$orderId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   LoginRoute: typeof LoginRoute
   ShopRoute: typeof ShopRouteWithChildren
 }
@@ -155,12 +252,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopProductsRouteImport
       parentRoute: typeof ShopRoute
     }
+    '/shop/checkout': {
+      id: '/shop/checkout'
+      path: '/checkout'
+      fullPath: '/shop/checkout'
+      preLoaderRoute: typeof ShopCheckoutRouteImport
+      parentRoute: typeof ShopRoute
+    }
     '/shop/cart': {
       id: '/shop/cart'
       path: '/cart'
       fullPath: '/shop/cart'
       preLoaderRoute: typeof ShopCartRouteImport
       parentRoute: typeof ShopRoute
+    }
+    '/dashboard/orders': {
+      id: '/dashboard/orders'
+      path: '/orders'
+      fullPath: '/dashboard/orders'
+      preLoaderRoute: typeof DashboardOrdersRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/shop/products/$slug': {
       id: '/shop/products/$slug'
@@ -169,8 +280,87 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopProductsSlugRouteImport
       parentRoute: typeof ShopProductsRoute
     }
+    '/shop/order/success': {
+      id: '/shop/order/success'
+      path: '/order/success'
+      fullPath: '/shop/order/success'
+      preLoaderRoute: typeof ShopOrderSuccessRouteImport
+      parentRoute: typeof ShopRoute
+    }
+    '/shop/order/pending': {
+      id: '/shop/order/pending'
+      path: '/order/pending'
+      fullPath: '/shop/order/pending'
+      preLoaderRoute: typeof ShopOrderPendingRouteImport
+      parentRoute: typeof ShopRoute
+    }
+    '/shop/order/failure': {
+      id: '/shop/order/failure'
+      path: '/order/failure'
+      fullPath: '/shop/order/failure'
+      preLoaderRoute: typeof ShopOrderFailureRouteImport
+      parentRoute: typeof ShopRoute
+    }
+    '/dashboard/orders/$orderId': {
+      id: '/dashboard/orders/$orderId'
+      path: '/$orderId'
+      fullPath: '/dashboard/orders/$orderId'
+      preLoaderRoute: typeof DashboardOrdersOrderIdRouteImport
+      parentRoute: typeof DashboardOrdersRoute
+    }
+    '/dashboard/admin/orders': {
+      id: '/dashboard/admin/orders'
+      path: '/admin/orders'
+      fullPath: '/dashboard/admin/orders'
+      preLoaderRoute: typeof DashboardAdminOrdersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/admin/orders/$orderId': {
+      id: '/dashboard/admin/orders/$orderId'
+      path: '/$orderId'
+      fullPath: '/dashboard/admin/orders/$orderId'
+      preLoaderRoute: typeof DashboardAdminOrdersOrderIdRouteImport
+      parentRoute: typeof DashboardAdminOrdersRoute
+    }
   }
 }
+
+interface DashboardOrdersRouteChildren {
+  DashboardOrdersOrderIdRoute: typeof DashboardOrdersOrderIdRoute
+}
+
+const DashboardOrdersRouteChildren: DashboardOrdersRouteChildren = {
+  DashboardOrdersOrderIdRoute: DashboardOrdersOrderIdRoute,
+}
+
+const DashboardOrdersRouteWithChildren = DashboardOrdersRoute._addFileChildren(
+  DashboardOrdersRouteChildren,
+)
+
+interface DashboardAdminOrdersRouteChildren {
+  DashboardAdminOrdersOrderIdRoute: typeof DashboardAdminOrdersOrderIdRoute
+}
+
+const DashboardAdminOrdersRouteChildren: DashboardAdminOrdersRouteChildren = {
+  DashboardAdminOrdersOrderIdRoute: DashboardAdminOrdersOrderIdRoute,
+}
+
+const DashboardAdminOrdersRouteWithChildren =
+  DashboardAdminOrdersRoute._addFileChildren(DashboardAdminOrdersRouteChildren)
+
+interface DashboardRouteChildren {
+  DashboardOrdersRoute: typeof DashboardOrdersRouteWithChildren
+  DashboardAdminOrdersRoute: typeof DashboardAdminOrdersRouteWithChildren
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardOrdersRoute: DashboardOrdersRouteWithChildren,
+  DashboardAdminOrdersRoute: DashboardAdminOrdersRouteWithChildren,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 interface ShopProductsRouteChildren {
   ShopProductsSlugRoute: typeof ShopProductsSlugRoute
@@ -186,19 +376,27 @@ const ShopProductsRouteWithChildren = ShopProductsRoute._addFileChildren(
 
 interface ShopRouteChildren {
   ShopCartRoute: typeof ShopCartRoute
+  ShopCheckoutRoute: typeof ShopCheckoutRoute
   ShopProductsRoute: typeof ShopProductsRouteWithChildren
+  ShopOrderFailureRoute: typeof ShopOrderFailureRoute
+  ShopOrderPendingRoute: typeof ShopOrderPendingRoute
+  ShopOrderSuccessRoute: typeof ShopOrderSuccessRoute
 }
 
 const ShopRouteChildren: ShopRouteChildren = {
   ShopCartRoute: ShopCartRoute,
+  ShopCheckoutRoute: ShopCheckoutRoute,
   ShopProductsRoute: ShopProductsRouteWithChildren,
+  ShopOrderFailureRoute: ShopOrderFailureRoute,
+  ShopOrderPendingRoute: ShopOrderPendingRoute,
+  ShopOrderSuccessRoute: ShopOrderSuccessRoute,
 }
 
 const ShopRouteWithChildren = ShopRoute._addFileChildren(ShopRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   LoginRoute: LoginRoute,
   ShopRoute: ShopRouteWithChildren,
 }

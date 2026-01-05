@@ -9,6 +9,9 @@ import products from "./routes/products";
 import categories from "./routes/categories";
 import cart from "./routes/cart";
 import orders from "./routes/orders";
+import checkout from "./routes/checkout";
+import webhooks from "./routes/webhooks";
+import admin from "./routes/admin";
 import type { AppEnv } from "./types";
 
 const app = new Hono<AppEnv>();
@@ -63,7 +66,10 @@ const api = app
   .route("/products", products)
   .route("/categories", categories)
   .route("/cart", cart)
-  .route("/orders", orders);
+  .route("/orders", orders)
+  .route("/checkout", checkout)
+  .route("/webhooks", webhooks)
+  .route("/admin", admin);
 
 // Serve static files in production (after API routes)
 if (process.env.NODE_ENV === "production") {
