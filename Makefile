@@ -55,23 +55,31 @@ db-setup: docker-up db-push db-seed ## Complete database setup (docker + push + 
 
 ##@ Docker
 
-docker-up: ## Start Docker services (PostgreSQL + Redis)
-	@echo "$(BLUE)Starting Docker services...$(NC)"
-	docker-compose up -d
+docker-up: ## Start Docker services (PostgreSQL + Redis only for local dev)
+	@echo "$(BLUE)Starting Docker services (Postgres + Redis)...$(NC)"
+	docker-compose -f docker-compose.dev.yml up -d
 
 docker-down: ## Stop Docker services
 	@echo "$(BLUE)Stopping Docker services...$(NC)"
-	docker-compose down
+	docker-compose -f docker-compose.dev.yml down
 
 docker-restart: docker-down docker-up ## Restart Docker services
 	@echo "$(GREEN)Docker services restarted$(NC)"
 
 docker-logs: ## View Docker logs
-	docker-compose logs -f
+	docker-compose -f docker-compose.dev.yml logs -f
 
 docker-clean: ## Stop and remove Docker volumes
 	@echo "$(YELLOW)Cleaning Docker volumes...$(NC)"
-	docker-compose down -v
+	docker-compose -f docker-compose.dev.yml down -v
+
+docker-full-up: ## Start ALL services in Docker (including server + web)
+	@echo "$(BLUE)Starting full Docker environment...$(NC)"
+	docker-compose up -d
+
+docker-full-down: ## Stop all Docker services
+	@echo "$(BLUE)Stopping full Docker environment...$(NC)"
+	docker-compose down
 
 ##@ Production
 

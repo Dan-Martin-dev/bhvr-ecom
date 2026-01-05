@@ -1,0 +1,51 @@
+# Docker Compose for Local Development
+# Only runs infrastructure (Postgres + Redis)
+# Run server and web locally with: make dev
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: bhvr-ecom-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bhvr_ecom
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password_change_in_prod_2026}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/db/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bhvr-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: bhvr-ecom-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bhvr-network
+
+networks:
+  bhvr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -52,14 +50,15 @@ services:
     container_name: bhvr-ecom-server
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
+      - PORT=3000
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/bhvr_ecom
       - REDIS_URL=redis://redis:6379
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3001}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3001}
       - MERCADO_PAGO_ACCESS_TOKEN=${MERCADO_PAGO_ACCESS_TOKEN}
       - MERCADO_PAGO_PUBLIC_KEY=${MERCADO_PAGO_PUBLIC_KEY}
       - MERCADO_PAGO_WEBHOOK_SECRET=${MERCADO_PAGO_WEBHOOK_SECRET}
@@ -78,21 +77,21 @@ services:
       - bhvr-network
 
   # Frontend Web (Vite + React) - Development Mode
-  # For production, build static files and serve with nginx
+  # For production, build static files and serve with nginx or via server
   web:
     image: oven/bun:1
     container_name: bhvr-ecom-web
     restart: unless-stopped
     working_dir: /app
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=development
-      - VITE_SERVER_URL=${VITE_SERVER_URL:-http://localhost:3001}
+      - VITE_SERVER_URL=${VITE_SERVER_URL:-}
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "bun install && bun --filter=web dev --host 0.0.0.0"
+    command: sh -c "bun install && bun --filter=web dev --host 0.0.0.0 --port 3001"
     depends_on:
       - server
     networks:

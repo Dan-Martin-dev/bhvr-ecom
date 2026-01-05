@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { HTTPException } from "hono/http-exception";
+import { serveStatic } from "hono/bun";
 import products from "./routes/products";
 import categories from "./routes/categories";
 import cart from "./routes/cart";
@@ -51,8 +52,9 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
-app.get("/", (c) => {
-  return c.text("OK");
+// Health check
+app.get("/api/health", (c) => {
+  return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // RPC API routes
@@ -62,6 +64,18 @@ const api = app
   .route("/categories", categories)
   .route("/cart", cart)
   .route("/orders", orders);
+
+// Serve static files in production (after API routes)
+if (process.env.NODE_ENV === "production") {
+  app.use("/*", serveStatic({ root: "./public" }));
+  // Fallback to index.html for client-side routing
+  app.get("/*", serveStatic({ path: "./public/index.html" }));
+} else {
+  // Development: Just return a message (Vite serves frontend)
+  app.get("/", (c) => {
+    return c.text("🚀 BHVR Stack API Server - Development Mode");
+  });
+}
 
 // Export type for RPC client
 export type AppType = typeof api;

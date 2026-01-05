@@ -1,2 +1,12 @@
 [install]
 linker = "isolated"
+
+[test]
+preload = ["./packages/core/src/__tests__/setup.ts"]
+
+# Load test environment
+[test.env]
+DATABASE_URL = "postgresql://postgres:dev_password_change_in_prod_2026@localhost:5432/bhvr_ecom"
+BETTER_AUTH_SECRET = "test-secret-key-for-testing-only"
+BETTER_AUTH_URL = "http://localhost:3000"
+CORS_ORIGIN = "http://localhost:5173"

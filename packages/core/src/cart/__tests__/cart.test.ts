@@ -3,6 +3,7 @@ import { db } from "@bhvr-ecom/db";
 import { product, category } from "@bhvr-ecom/db/schema/ecommerce";
 import * as cartUseCases from "../index";
 import type { AddToCartInput } from "@bhvr-ecom/validations/cart";
+import { TEST_RUN_ID } from "../../__tests__/setup";
 
 describe("Cart Use Cases", () => {
   let testProductId: string;
@@ -15,7 +16,7 @@ describe("Cart Use Cases", () => {
       .insert(category)
       .values({
         name: "Cart Test Category",
-        slug: "cart-test-category",
+        slug: `cart-test-category-${TEST_RUN_ID}`,
       })
       .returning();
     testCategoryId = testCategory!.id;
@@ -25,7 +26,7 @@ describe("Cart Use Cases", () => {
       .insert(product)
       .values({
         name: "Cart Test Product",
-        slug: "cart-test-product",
+        slug: `cart-test-product-${TEST_RUN_ID}`,
         price: 2999,
         stock: 100,
         trackInventory: true,

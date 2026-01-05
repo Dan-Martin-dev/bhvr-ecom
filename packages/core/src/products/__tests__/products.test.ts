@@ -3,6 +3,7 @@ import { db } from "@bhvr-ecom/db";
 import { product, category } from "@bhvr-ecom/db/schema/ecommerce";
 import * as productUseCases from "../index";
 import type { CreateProductInput } from "@bhvr-ecom/validations/products";
+import { TEST_RUN_ID } from "../../__tests__/setup";
 
 describe("Product Use Cases", () => {
   let testCategoryId: string;
@@ -14,7 +15,7 @@ describe("Product Use Cases", () => {
       .insert(category)
       .values({
         name: "Test Category",
-        slug: "test-category",
+        slug: `test-category-${TEST_RUN_ID}`,
       })
       .returning();
     testCategoryId = testCategory!.id;

@@ -13,7 +13,7 @@ WORKDIR /app
 # Copy lockfile and package.jsons from the pruned stage
 # This creates a cached layer. If package.json didn't change, we skip install.
 COPY --from=pruner /app/out/json/ .
-COPY --from=pruner /app/out/bun.lockb ./bun.lockb
+COPY --from=pruner /app/out/bun.lock* ./
 
 RUN bun install --frozen-lockfile
 
@@ -29,9 +29,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 appuser
+# Create non-root user for security (Debian/Ubuntu syntax)
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 --gid nodejs --shell /bin/false appuser
 
 # Copy the build artifacts and necessary node_modules
 # Note: In Bun, you might run the source directly or a compiled file depending on setup

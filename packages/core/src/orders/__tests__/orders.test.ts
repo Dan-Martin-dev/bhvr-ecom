@@ -9,6 +9,7 @@ import {
 } from "@bhvr-ecom/db/schema/ecommerce";
 import * as orderUseCases from "../index";
 import type { CreateOrderInput } from "@bhvr-ecom/validations/orders";
+import { TEST_RUN_ID } from "../../__tests__/setup";
 
 describe("Order Use Cases", () => {
   let testProductId: string;
@@ -23,7 +24,7 @@ describe("Order Use Cases", () => {
       .insert(category)
       .values({
         name: "Order Test Category",
-        slug: "order-test-category",
+        slug: `order-test-category-${TEST_RUN_ID}`,
       })
       .returning();
     testCategoryId = testCategory!.id;
@@ -33,7 +34,7 @@ describe("Order Use Cases", () => {
       .insert(product)
       .values({
         name: "Order Test Product",
-        slug: "order-test-product",
+        slug: `order-test-product-${TEST_RUN_ID}`,
         price: 5000,
         stock: 100,
         trackInventory: true,
