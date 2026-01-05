@@ -1746,19 +1746,19 @@ find $BACKUP_DIR -name "db_*.sql.gz" -mtime +7 -delete
 | Basic Drizzle schema | ✅ | Auth tables |
 | Environment configuration | ✅ | @bhvr-ecom/env package |
 
-### Phase 2: Core E-Commerce (Weeks 3-5)
+### Phase 2: Core E-Commerce (Weeks 3-5) ✅
 
 **Goal:** Product catalog and shopping cart
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Product schema & CRUD | 🔲 | Drizzle + Hono routes |
-| Category management | 🔲 | Hierarchical categories |
-| Product listing page | 🔲 | TanStack Query + pagination |
-| Product detail page | 🔲 | SEO-optimized |
-| Shopping cart (server) | 🔲 | PostgreSQL-backed |
-| Shopping cart (guest) | 🔲 | localStorage + merge |
-| Redis integration | 🔲 | Sessions, caching |
+| Product schema & CRUD | ✅ | Drizzle + Hono routes complete |
+| Category management | ✅ | Hierarchical categories implemented |
+| Product listing page | ✅ | TanStack Query + pagination with search |
+| Product detail page | ✅ | SEO-optimized with add-to-cart |
+| Shopping cart (server) | ✅ | PostgreSQL-backed with validation |
+| Shopping cart (guest) | ✅ | Session-based with cart page |
+| Redis integration | ✅ | Sessions, caching configured |
 
 ### Phase 3: Checkout & Payments (Weeks 6-7)
 
@@ -1890,11 +1890,516 @@ TRAEFIK_USERS=admin:$$apr1$$...  # htpasswd -nb admin password
 
 ---
 
+### 6.5 Testing Strategy
+
+#### Unit Tests (packages/core)
+
+```typescript
+// packages/core/src/__tests__/orders/create-order.test.ts
+import { describe, expect, it, beforeEach, mock } from "bun:test";
+import { createOrder } from "../../orders/create-order";
+
+describe("createOrder", () => {
+  it("should create order with valid cart", async () => {
+    // Arrange
+    const mockDb = createMockDb({
+      cartItems: [
+        { id: "1", productId: "p1", quantity: 2, product: { price: 1000, inventory: 10 } },
+      ],
+    });
+
+    const input = {
+      cartId: "cart-1",
+      userId: "user-1",
+      shippingAddress: { street: "123 Main St", city: "Buenos Aires" },
+    };
+
+    // Act
+    const order = await createOrder(input, {
+      db: mockDb,
+      paymentGateway: mockPaymentGateway,
+      emailService: mockEmailService,
+    });
+
+    // Assert
+    expect(order.status).toBe("pending");
+    expect(order.total).toBe(2000); // 2 * 1000
+  });
+
+  it("should throw error when cart is empty", async () => {
+    const mockDb = createMockDb({ cartItems: [] });
+    
+    await expect(
+      createOrder({ cartId: "empty", userId: "user-1" }, { db: mockDb })
+    ).rejects.toThrow("Cart is empty");
+  });
+
+  it("should throw error when inventory insufficient", async () => {
+    const mockDb = createMockDb({
+      cartItems: [
+        { quantity: 10, product: { inventory: 5 } },
+      ],
+    });
+    
+    await expect(
+      createOrder({ cartId: "c1", userId: "u1" }, { db: mockDb })
+    ).rejects.toThrow("Insufficient stock");
+  });
+});
+```
+
+#### Integration Tests (E2E)
+
+```typescript
+// apps/server/src/__tests__/integration/checkout.test.ts
+import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import { testClient } from "hono/testing";
+import app from "../../index";
+import { db } from "@bhvr-ecom/db";
+import { cleanDatabase, seedTestData } from "./helpers";
+
+describe("Checkout Integration", () => {
+  beforeAll(async () => {
+    await cleanDatabase();
+    await seedTestData();
+  });
+
+  it("should complete full checkout flow", async () => {
+    const client = testClient(app);
+
+    // 1. Add items to cart
+    const addToCart = await client.api.cart.items.$post({
+      json: { productId: "test-product-1", quantity: 2 },
+    });
+    expect(addToCart.status).toBe(200);
+
+    // 2. Create checkout
+    const checkout = await client.api.checkout.mercadopago.$post({
+      json: {
+        shippingAddress: { street: "Test St", city: "BA" },
+      },
+    });
+    expect(checkout.status).toBe(200);
+    const { initPoint, orderId } = await checkout.json();
+    expect(initPoint).toContain("mercadopago.com");
+
+    // 3. Simulate webhook (payment approved)
+    const webhook = await client.api.webhooks.mercadopago.$post({
+      json: {
+        type: "payment",
+        data: { id: "12345" },
+      },
+    });
+    expect(webhook.status).toBe(200);
+
+    // 4. Verify order status updated
+    const order = await db.query.orders.findFirst({
+      where: (orders, { eq }) => eq(orders.id, orderId),
+    });
+    expect(order?.status).toBe("paid");
+  });
+});
+```
+
+#### Performance Tests (Load Testing)
+
+```javascript
+// tests/performance/checkout.k6.js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 100 }, // Ramp up to 100 users
+    { duration: '5m', target: 100 }, // Stay at 100 users
+    { duration: '2m', target: 0 },   // Ramp down to 0 users
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<500'], // 95% of requests under 500ms
+    http_req_failed: ['rate<0.01'],   // <1% failure rate
+  },
+};
+
+export default function () {
+  const BASE_URL = 'https://api.example.com';
+  
+  // GET products (read-heavy)
+  const products = http.get(`${BASE_URL}/api/products`);
+  check(products, {
+    'products loaded': (r) => r.status === 200,
+    'products response time OK': (r) => r.timings.duration < 100,
+  });
+
+  sleep(1);
+
+  // POST add to cart (write)
+  const addToCart = http.post(
+    `${BASE_URL}/api/cart/items`,
+    JSON.stringify({ productId: 'test-1', quantity: 1 }),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+  check(addToCart, {
+    'cart updated': (r) => r.status === 200,
+  });
+
+  sleep(2);
+}
+```
+
+**Run k6 tests:**
+
+```bash
+k6 run tests/performance/checkout.k6.js
+```
+
+### 6.6 Monitoring & Observability
+
+#### Structured Logging (Pino)
+
+```typescript
+// packages/core/src/utils/logger.ts
+import pino from "pino";
+
+export const logger = pino({
+  level: process.env.LOG_LEVEL || "info",
+  transport:
+    process.env.NODE_ENV === "development"
+      ? {
+          target: "pino-pretty",
+          options: { colorize: true },
+        }
+      : undefined,
+  formatters: {
+    level: (label) => ({ level: label }),
+  },
+  timestamp: pino.stdTimeFunctions.isoTime,
+});
+
+// Usage:
+logger.info({ orderId: "123", userId: "456" }, "Order created");
+logger.error({ err: error }, "Payment failed");
+```
+
+#### Health Checks
+
+```typescript
+// apps/server/src/routes/health.ts
+import { Hono } from "hono";
+import { db } from "@bhvr-ecom/db";
+import { redis } from "@bhvr-ecom/cache";
+
+const health = new Hono();
+
+health.get("/health", async (c) => {
+  const checks = {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    checks: {
+      database: "unknown",
+      redis: "unknown",
+      memory: "unknown",
+    },
+  };
+
+  // Check PostgreSQL
+  try {
+    await db.execute("SELECT 1");
+    checks.checks.database = "healthy";
+  } catch (error) {
+    checks.checks.database = "unhealthy";
+    checks.status = "degraded";
+  }
+
+  // Check Redis
+  try {
+    await redis.ping();
+    checks.checks.redis = "healthy";
+  } catch (error) {
+    checks.checks.redis = "unhealthy";
+    checks.status = "degraded";
+  }
+
+  // Check Memory
+  const memUsage = process.memoryUsage();
+  checks.checks.memory = {
+    heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
+    heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
+    rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
+  };
+
+  return c.json(checks, checks.status === "ok" ? 200 : 503);
+});
+
+health.get("/health/liveness", (c) => {
+  return c.json({ status: "alive" });
+});
+
+health.get("/health/readiness", async (c) => {
+  try {
+    await db.execute("SELECT 1");
+    return c.json({ status: "ready" });
+  } catch {
+    return c.json({ status: "not ready" }, 503);
+  }
+});
+
+export default health;
+```
+
+#### Prometheus Metrics (Optional)
+
+```typescript
+// apps/server/src/middleware/metrics.ts
+import { Hono } from "hono";
+import { register, Counter, Histogram } from "prom-client";
+
+const httpRequestsTotal = new Counter({
+  name: "http_requests_total",
+  help: "Total HTTP requests",
+  labelNames: ["method", "route", "status"],
+});
+
+const httpRequestDuration = new Histogram({
+  name: "http_request_duration_seconds",
+  help: "HTTP request duration",
+  labelNames: ["method", "route"],
+  buckets: [0.01, 0.05, 0.1, 0.5, 1, 5],
+});
+
+export function metricsMiddleware() {
+  return async (c: Context, next: Next) => {
+    const start = Date.now();
+    
+    await next();
+    
+    const duration = (Date.now() - start) / 1000;
+    const route = c.req.routePath;
+    const method = c.req.method;
+    const status = c.res.status;
+
+    httpRequestsTotal.inc({ method, route, status });
+    httpRequestDuration.observe({ method, route }, duration);
+  };
+}
+
+// Metrics endpoint
+const metrics = new Hono();
+metrics.get("/metrics", async (c) => {
+  return c.text(await register.metrics());
+});
+
+export default metrics;
+```
+
+### 6.7 Security Best Practices
+
+#### OWASP Top 10 Mitigation
+
+| Vulnerability | Mitigation |
+|---------------|------------|
+| **A01: Broken Access Control** | Role-based middleware, verify userId on all user actions |
+| **A02: Cryptographic Failures** | HTTPS enforced, bcrypt for passwords (Better Auth), secure session storage (Redis) |
+| **A03: Injection** | Drizzle ORM (parameterized queries), input validation with Zod |
+| **A04: Insecure Design** | Clean Architecture, fail-safe defaults, transaction safety |
+| **A05: Security Misconfiguration** | Environment validation, minimal Docker images, CSP headers |
+| **A06: Vulnerable Components** | Dependabot alerts, regular `bun update`, minimal dependencies |
+| **A07: Authentication Failures** | Better Auth (secure by default), rate limiting, session expiry |
+| **A08: Software/Data Integrity** | Webhook signature verification, integrity checks |
+| **A09: Logging Failures** | Structured logging (Pino), no sensitive data in logs |
+| **A10: Server-Side Request Forgery** | Validate URLs, allowlist domains for webhooks |
+
+#### Rate Limiting (Hono)
+
+```typescript
+// apps/server/src/middleware/rate-limit.ts
+import { Hono } from "hono";
+import { redis } from "@bhvr-ecom/cache";
+
+interface RateLimitOptions {
+  windowMs: number;
+  maxRequests: number;
+}
+
+export function rateLimit(options: RateLimitOptions) {
+  const { windowMs, maxRequests } = options;
+
+  return async (c: Context, next: Next) => {
+    const key = `rate-limit:${c.req.header("x-forwarded-for") || "unknown"}`;
+    
+    const current = await redis.incr(key);
+    
+    if (current === 1) {
+      await redis.expire(key, Math.floor(windowMs / 1000));
+    }
+
+    if (current > maxRequests) {
+      return c.json(
+        { error: "Too many requests. Please try again later." },
+        429
+      );
+    }
+
+    c.header("X-RateLimit-Limit", maxRequests.toString());
+    c.header("X-RateLimit-Remaining", (maxRequests - current).toString());
+
+    await next();
+  };
+}
+
+// Usage:
+app.use(
+  "/api/*",
+  rateLimit({ windowMs: 60 * 1000, maxRequests: 100 }) // 100 requests/min
+);
+```
+
+#### Input Sanitization
+
+```typescript
+// packages/validations/src/common.ts
+import { z } from "zod";
+import DOMPurify from "isomorphic-dompurify";
+
+export const sanitizeString = (str: string): string => {
+  return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] });
+};
+
+export const safeString = z.string().transform(sanitizeString);
+
+export const emailSchema = z.string().email().toLowerCase().trim();
+
+export const slugSchema = z
+  .string()
+  .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens")
+  .min(1)
+  .max(255);
+```
+
+### 6.8 Troubleshooting Guide
+
+#### Common Issues
+
+| Issue | Symptoms | Solution |
+|-------|----------|----------|
+| **Port 5432 already in use** | `docker-compose up` fails | Stop existing Postgres: `sudo systemctl stop postgresql` or `docker stop $(docker ps -q --filter "expose=5432")` |
+| **Port 6379 already in use** | Redis container won't start | Stop existing Redis: `sudo systemctl stop redis` or `docker stop $(docker ps -q --filter "expose=6379")` |
+| **Bun install fails** | Package resolution errors | Clear cache: `rm -rf node_modules && rm bun.lockb && bun install` |
+| **Drizzle migrations fail** | Database connection error | Check `DATABASE_URL` in `.env`, verify Postgres is running |
+| **Better Auth session issues** | User logged out unexpectedly | Check Redis is running, verify `BETTER_AUTH_SECRET` is set |
+| **Mercado Pago webhook not receiving** | Payments don't update order status | Verify `notification_url` is publicly accessible (use ngrok for local testing) |
+| **CORS errors** | Frontend can't call API | Check `CORS_ORIGIN` in server `.env`, ensure Vite proxy is configured |
+| **Turbo cache issues** | Builds using stale code | Clear Turbo cache: `rm -rf .turbo && bun run build` |
+
+#### Debug Commands
+
+```bash
+# Check Docker containers
+docker ps -a
+
+# View logs
+docker-compose logs -f server
+docker-compose logs -f postgres
+
+# Connect to PostgreSQL
+docker exec -it bhvr-ecom-postgres psql -U postgres -d bhvr_ecom
+
+# Connect to Redis
+docker exec -it bhvr-ecom-redis redis-cli
+
+# Check disk usage
+docker system df
+
+# Clean Docker
+docker system prune -a --volumes
+
+# Bun environment info
+bun --version
+bun env
+
+# Check port usage
+lsof -i :3000
+lsof -i :3001
+lsof -i :5432
+lsof -i :6379
+```
+
+### 6.9 Contributing Guidelines
+
+#### Code Style
+
+- **TypeScript**: Strict mode enabled
+- **Formatting**: Prettier (automated)
+- **Linting**: ESLint with recommended rules
+- **Naming Conventions**:
+  - Files: `kebab-case.ts`
+  - Components: `PascalCase.tsx`
+  - Functions: `camelCase`
+  - Constants: `UPPER_SNAKE_CASE`
+  - Types/Interfaces: `PascalCase`
+
+#### Git Workflow
+
+```bash
+# Feature branch
+git checkout -b feature/add-product-search
+
+# Commit messages (Conventional Commits)
+git commit -m "feat(products): add full-text search"
+git commit -m "fix(cart): resolve quantity update bug"
+git commit -m "docs(readme): update installation steps"
+
+# Types: feat, fix, docs, style, refactor, test, chore
+```
+
+#### Pull Request Template
+
+```markdown
+## Description
+Brief description of changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated
+- [ ] No console errors
+```
+
+### 6.10 License & Credits
+
+#### License
+
+MIT License - See [LICENSE](LICENSE) file
+
+#### Credits
+
+- **Bun**: [https://bun.sh](https://bun.sh)
+- **Hono**: [https://hono.dev](https://hono.dev)
+- **Drizzle ORM**: [https://orm.drizzle.team](https://orm.drizzle.team)
+- **Better Auth**: [https://better-auth.com](https://better-auth.com)
+- **TanStack**: [https://tanstack.com](https://tanstack.com)
+- **shadcn/ui**: [https://ui.shadcn.com](https://ui.shadcn.com)
+- **Mercado Pago**: [https://www.mercadopago.com](https://www.mercadopago.com)
+
+---
+
 ## Document History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-01-01 | Architecture Team | Initial release |
+| 1.1.0 | 2026-01-04 | Architecture Team | Added testing, monitoring, security, troubleshooting sections |
 
 ---
 
