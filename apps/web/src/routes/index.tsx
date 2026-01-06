@@ -37,15 +37,17 @@ function HomeComponent() {
             Self-hosted, type-safe, and blazing fast.
           </p>
           <div className="flex justify-center gap-4">
-            <Button size="lg" asChild>
-              <Link to="/shop/products">
+            <Link to="/shop/products">
+              <Button size="lg">
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Browse Products
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/dashboard">View Dashboard</Link>
-            </Button>
+              </Button>
+            </Link>
+            <Link to="/dashboard">
+              <Button size="lg" variant="outline">
+                View Dashboard
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import Redis from "ioredis";
+import type { RedisOptions } from "ioredis";
 
-const getRedisUrl = () => {
+const getRedisConfig = (): string | RedisOptions => {
   // Check for REDIS_URL first (full connection string)
   if (process.env.REDIS_URL) {
     return process.env.REDIS_URL;
@@ -21,21 +22,39 @@ const getRedisUrl = () => {
 };
 
 // Create Redis client
-export const redis = new Redis(getRedisUrl(), {
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  lazyConnect: false,
-  retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-  reconnectOnError(err) {
-    const targetErrors = ["READONLY", "ECONNRESET"];
-    return targetErrors.some((targetError) =>
-      err.message.includes(targetError)
-    );
-  },
-});
+const redisConfig = getRedisConfig();
+export const redis = typeof redisConfig === "string" 
+  ? new Redis(redisConfig, {
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      lazyConnect: false,
+      retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+      reconnectOnError(err) {
+        const targetErrors = ["READONLY", "ECONNRESET"];
+        return targetErrors.some((targetError) =>
+          err.message.includes(targetError)
+        );
+      },
+    })
+  : new Redis({
+      ...redisConfig,
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      lazyConnect: false,
+      retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+      reconnectOnError(err) {
+        const targetErrors = ["READONLY", "ECONNRESET"];
+        return targetErrors.some((targetError) =>
+          err.message.includes(targetError)
+        );
+      },
+    });
 
 // Handle connection events
 redis.on("connect", () => {

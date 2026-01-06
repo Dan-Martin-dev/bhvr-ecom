@@ -54,9 +54,10 @@ describe("Product Use Cases", () => {
 
       const result = await productUseCases.createProduct(productData);
 
-      expect(result.id).toBeDefined();
-      expect(result.name).toBe("Minimal Product");
-      expect(result.isActive).toBe(true); // Default value
+      expect(result).toBeDefined();
+      expect(result!.id).toBeDefined();
+      expect(result!.name).toBe("Minimal Product");
+      expect(result!.isActive).toBe(true); // Default value
     });
   });
 
@@ -143,8 +144,8 @@ describe("Product Use Cases", () => {
 
       if (result.products.length > 1) {
         for (let i = 1; i < result.products.length; i++) {
-          expect(result.products[i].price).toBeGreaterThanOrEqual(
-            result.products[i - 1].price
+          expect(result.products[i]!.price).toBeGreaterThanOrEqual(
+            result.products[i - 1]!.price
           );
         }
       }
@@ -206,7 +207,8 @@ describe("Product Use Cases", () => {
         })
         .returning();
 
-      const result = await productUseCases.deleteProduct(productToDelete.id);
+      expect(productToDelete).toBeDefined();
+      const result = await productUseCases.deleteProduct(productToDelete!.id);
 
       expect(result).toBeDefined();
       expect(result?.isActive).toBe(false);

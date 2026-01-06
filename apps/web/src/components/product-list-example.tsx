@@ -33,7 +33,9 @@ export function ProductListExample() {
       setLoading(true);
       
       // Type-safe API call with full auto-complete
-      const response = await api.api.products.$get();
+      const response = await api.api.products.$get({
+        query: {},
+      });
       
       if (response.ok) {
         const data = await response.json();

@@ -2,13 +2,11 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { createOrderSchema } from "@bhvr-ecom/validations";
 import { db } from "@bhvr-ecom/db";
-import { cart, cartItem, product, order, orderItem } from "@bhvr-ecom/db/schema/ecommerce";
+import { cart, order, orderItem } from "@bhvr-ecom/db/schema/ecommerce";
 import { eq, sql } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
 import { env } from "@bhvr-ecom/env/server";
 import type { AppEnv } from "../types";
-
-const checkout = new Hono<AppEnv>();
 
 // Interface for Mercado Pago SDK (if installed)
 interface MercadoPagoItem {
@@ -63,7 +61,7 @@ async function generateOrderNumber(): Promise<string> {
  * POST /api/checkout/mercadopago
  * Create Mercado Pago payment preference and return init_point
  */
-checkout.post(
+const checkout = new Hono<AppEnv>().post(
   "/mercadopago",
   authMiddleware,
   zValidator("json", createOrderSchema),
@@ -78,7 +76,11 @@ checkout.post(
         with: {
           items: {
             with: {
-              product: true,
+              product: {
+                with: {
+                  images: true,
+                },
+              },
             },
           },
         },
@@ -118,7 +120,7 @@ checkout.post(
       const orderNumber = await generateOrderNumber();
 
       // 5. Create order in database
-      const [newOrder] = await db
+      const newOrder = await db
         .insert(order)
         .values({
           orderNumber,
@@ -138,7 +140,8 @@ checkout.post(
           shippingZone: input.shippingZone,
           customerNotes: input.notes,
         })
-        .returning();
+        .returning()
+        .then((rows) => rows[0]!);
 
       // 6. Create order items
       const orderItems = userCart.items.map((item) => ({
@@ -233,7 +236,11 @@ checkout.post(
         );
       }
 
-      const preference = await preferenceResponse.json();
+      const preference = (await preferenceResponse.json()) as {
+        id: string;
+        init_point: string;
+        sandbox_init_point: string;
+      };
 
       // 8. Update order with preference ID (add paymentPreferenceId column or store in paymentId)
       await db

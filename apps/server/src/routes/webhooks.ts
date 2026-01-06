@@ -68,7 +68,12 @@ webhooks.post("/mercadopago", async (c) => {
       return c.json({ error: "Failed to fetch payment info" }, 500);
     }
 
-    const payment = await paymentResponse.json();
+    const payment = (await paymentResponse.json()) as {
+      id: number;
+      status: string;
+      external_reference?: string;
+      date_approved?: string;
+    };
     
     console.log("[Mercado Pago Webhook] Payment details:", {
       id: payment.id,

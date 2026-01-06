@@ -2,16 +2,14 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { db } from "@bhvr-ecom/db";
 import { order } from "@bhvr-ecom/db/schema/ecommerce";
-import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
+import { eq, desc, and, sql, count, gte } from "drizzle-orm";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
 import type { AppEnv } from "../types";
 
-const admin = new Hono<AppEnv>();
-
 // Admin-only middleware (check user role)
-const adminMiddleware = async (c: any, next: any) => {
-  const user = c.get("user");
+const adminMiddleware = async (_c: any, next: any) => {
+  // const user = c.get("user");
   
   // TODO: Check if user has admin role
   // For now, we'll allow all authenticated users
@@ -19,9 +17,6 @@ const adminMiddleware = async (c: any, next: any) => {
   
   await next();
 };
-
-// Apply auth + admin middleware to all routes
-admin.use("/*", authMiddleware, adminMiddleware);
 
 // ============================================================================
 // ORDERS
@@ -35,10 +30,15 @@ const updateOrderStatusSchema = z.object({
 });
 
 /**
- * GET /api/admin/orders
- * List all orders with filtering
+ * Admin routes with authentication + authorization
  */
-admin.get("/orders", async (c) => {
+const admin = new Hono<AppEnv>()
+  .use("/*", authMiddleware, adminMiddleware)
+  /**
+   * GET /api/admin/orders
+   * List all orders with filtering
+   */
+  .get("/orders", async (c) => {
   const page = parseInt(c.req.query("page") || "1");
   const limit = parseInt(c.req.query("limit") || "20");
   const status = c.req.query("status");
@@ -79,17 +79,16 @@ admin.get("/orders", async (c) => {
     pagination: {
       page,
       limit,
-      total: totalCount[0].count,
-      totalPages: Math.ceil(totalCount[0].count / limit),
+      total: totalCount[0]!.count,
+      totalPages: Math.ceil(totalCount[0]!.count / limit),
     },
   });
-});
-
+})
 /**
  * GET /api/admin/orders/:id
  * Get single order details
  */
-admin.get("/orders/:id", async (c) => {
+.get("/orders/:id", async (c) => {
   const id = c.req.param("id");
   
   const orderData = await db.query.order.findFirst({
@@ -108,13 +107,12 @@ admin.get("/orders/:id", async (c) => {
   }
 
   return c.json(orderData);
-});
-
+})
 /**
  * PATCH /api/admin/orders/:id/status
  * Update order status and tracking info
  */
-admin.patch(
+.patch(
   "/orders/:id/status",
   zValidator("json", updateOrderStatusSchema),
   async (c) => {
@@ -156,13 +154,12 @@ admin.patch(
 
     return c.json(updatedOrder);
   }
-);
-
+)
 /**
  * GET /api/admin/dashboard
  * Get dashboard statistics
  */
-admin.get("/dashboard", async (c) => {
+.get("/dashboard", async (c) => {
   const today = new Date();
   const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
@@ -184,10 +181,10 @@ admin.get("/dashboard", async (c) => {
   ]);
 
   return c.json({
-    totalOrders: totalOrders[0].count,
-    pendingOrders: pendingOrders[0].count,
-    totalRevenue: totalRevenue[0].sum,
-    revenueLastMonth: recentRevenue[0].sum,
+    totalOrders: totalOrders[0]!.count,
+    pendingOrders: pendingOrders[0]!.count,
+    totalRevenue: totalRevenue[0]!.sum,
+    revenueLastMonth: recentRevenue[0]!.sum,
   });
 });
 

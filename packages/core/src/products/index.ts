@@ -40,42 +40,40 @@ export async function createProduct(input: CreateProductInput) {
 // ============================================================================
 
 export async function getProducts(query: ProductQueryInput) {
-  const {
-    page,
-    limit,
-    search,
-    categoryId,
-    isActive,
-    isFeatured,
-    minPrice,
-    maxPrice,
-    sortBy,
-    sortOrder,
-  } = query;
+  const page = Number(query.page ?? 1);
+  const limit = Number(query.limit ?? 12);
+  const search = query.search;
+  const categoryId = query.categoryId;
+  const isActive = query.isActive;
+  const isFeatured = query.isFeatured;
+  const minPrice = query.minPrice;
+  const maxPrice = query.maxPrice;
+  const sortBy = (query.sortBy ?? "createdAt") as "name" | "price" | "createdAt" | "stock";
+  const sortOrder = (query.sortOrder ?? "desc") as "asc" | "desc";
 
   const offset = (page - 1) * limit;
 
   // Build where conditions
   const conditions = [];
 
-  if (isActive !== undefined) {
-    conditions.push(eq(product.isActive, isActive));
+  if (isActive !== undefined && isActive !== null) {
+    conditions.push(eq(product.isActive, isActive as boolean));
   }
 
-  if (isFeatured !== undefined) {
-    conditions.push(eq(product.isFeatured, isFeatured));
+  if (isFeatured !== undefined && isFeatured !== null) {
+    conditions.push(eq(product.isFeatured, isFeatured as boolean));
   }
 
   if (categoryId) {
     conditions.push(eq(product.categoryId, categoryId));
   }
 
-  if (minPrice !== undefined) {
-    conditions.push(gte(product.price, minPrice));
+  if (minPrice !== undefined && minPrice !== null) {
+    conditions.push(gte(product.price, minPrice as number));
   }
 
-  if (maxPrice !== undefined) {
-    conditions.push(lte(product.price, maxPrice));
+  if (maxPrice !== undefined && maxPrice !== null) {
+    conditions.push(lte(product.price, maxPrice as number));
   }
 
   if (search) {
@@ -109,7 +107,7 @@ export async function getProducts(query: ProductQueryInput) {
       category: true,
     },
     orderBy: [orderByDirection(orderByColumn)],
-    limit,
+    limit: limit,
     offset,
   });
 
@@ -124,8 +122,8 @@ export async function getProducts(query: ProductQueryInput) {
   return {
     products,
     pagination: {
-      page,
-      limit,
+      page: page,
+      limit: limit,
       total: count,
       totalPages: Math.ceil(count / limit),
     },

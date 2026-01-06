@@ -1153,6 +1153,7 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 interface CheckoutFormData {
   email: string;
@@ -1182,11 +1183,9 @@ export function CheckoutPage() {
     onSubmit: async (values) => {
       setIsProcessing(true);
       try {
-        // Create payment preference on backend
-        const response = await fetch("/api/checkout/mercadopago", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        // Create payment preference on backend using Hono RPC
+        const response = await api.api.checkout.mercadopago.$post({
+          json: {
             payer: {
               email: values.email,
               name: values.name,
@@ -1210,7 +1209,7 @@ export function CheckoutPage() {
               id: "standard",
               cost: 500, // $5 ARS shipping
             },
-          }),
+          },
         });
 
         if (!response.ok) {
