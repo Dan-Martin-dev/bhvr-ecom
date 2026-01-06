@@ -11,19 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as authenticatedRouteRouteImport } from './routes/(authenticated)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopProductsRouteImport } from './routes/shop.products'
 import { Route as ShopCheckoutRouteImport } from './routes/shop.checkout'
 import { Route as ShopCartRouteImport } from './routes/shop.cart'
-import { Route as DashboardOrdersRouteImport } from './routes/dashboard.orders'
+import { Route as authenticatedDashboardRouteRouteImport } from './routes/(authenticated)/dashboard/route'
+import { Route as authenticatedDashboardIndexRouteImport } from './routes/(authenticated)/dashboard/index'
 import { Route as ShopProductsSlugRouteImport } from './routes/shop.products.$slug'
 import { Route as ShopOrderSuccessRouteImport } from './routes/shop.order.success'
 import { Route as ShopOrderPendingRouteImport } from './routes/shop.order.pending'
 import { Route as ShopOrderFailureRouteImport } from './routes/shop.order.failure'
-import { Route as DashboardOrdersOrderIdRouteImport } from './routes/dashboard.orders.$orderId'
-import { Route as DashboardAdminOrdersRouteImport } from './routes/dashboard.admin.orders'
-import { Route as DashboardAdminOrdersOrderIdRouteImport } from './routes/dashboard.admin.orders.$orderId'
+import { Route as authenticatedDashboardOrdersIndexRouteImport } from './routes/(authenticated)/dashboard/orders/index'
+import { Route as authenticatedDashboardOrdersOrderIdRouteImport } from './routes/(authenticated)/dashboard/orders/$orderId'
+import { Route as authenticatedDashboardAdminOrdersIndexRouteImport } from './routes/(authenticated)/dashboard/admin/orders/index'
+import { Route as authenticatedDashboardAdminOrdersOrderIdRouteImport } from './routes/(authenticated)/dashboard/admin/orders/$orderId'
 
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
@@ -35,9 +37,8 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const authenticatedRouteRoute = authenticatedRouteRouteImport.update({
+  id: '/(authenticated)',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -60,11 +61,18 @@ const ShopCartRoute = ShopCartRouteImport.update({
   path: '/cart',
   getParentRoute: () => ShopRoute,
 } as any)
-const DashboardOrdersRoute = DashboardOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => DashboardRoute,
-} as any)
+const authenticatedDashboardRouteRoute =
+  authenticatedDashboardRouteRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => authenticatedRouteRoute,
+  } as any)
+const authenticatedDashboardIndexRoute =
+  authenticatedDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
 const ShopProductsSlugRoute = ShopProductsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -85,132 +93,146 @@ const ShopOrderFailureRoute = ShopOrderFailureRouteImport.update({
   path: '/order/failure',
   getParentRoute: () => ShopRoute,
 } as any)
-const DashboardOrdersOrderIdRoute = DashboardOrdersOrderIdRouteImport.update({
-  id: '/$orderId',
-  path: '/$orderId',
-  getParentRoute: () => DashboardOrdersRoute,
-} as any)
-const DashboardAdminOrdersRoute = DashboardAdminOrdersRouteImport.update({
-  id: '/admin/orders',
-  path: '/admin/orders',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAdminOrdersOrderIdRoute =
-  DashboardAdminOrdersOrderIdRouteImport.update({
-    id: '/$orderId',
-    path: '/$orderId',
-    getParentRoute: () => DashboardAdminOrdersRoute,
+const authenticatedDashboardOrdersIndexRoute =
+  authenticatedDashboardOrdersIndexRouteImport.update({
+    id: '/orders/',
+    path: '/orders/',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
+const authenticatedDashboardOrdersOrderIdRoute =
+  authenticatedDashboardOrdersOrderIdRouteImport.update({
+    id: '/orders/$orderId',
+    path: '/orders/$orderId',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
+const authenticatedDashboardAdminOrdersIndexRoute =
+  authenticatedDashboardAdminOrdersIndexRouteImport.update({
+    id: '/admin/orders/',
+    path: '/admin/orders/',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
+const authenticatedDashboardAdminOrdersOrderIdRoute =
+  authenticatedDashboardAdminOrdersOrderIdRouteImport.update({
+    id: '/admin/orders/$orderId',
+    path: '/admin/orders/$orderId',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/shop': typeof ShopRouteWithChildren
-  '/dashboard/orders': typeof DashboardOrdersRouteWithChildren
+  '/dashboard': typeof authenticatedDashboardRouteRouteWithChildren
   '/shop/cart': typeof ShopCartRoute
   '/shop/checkout': typeof ShopCheckoutRoute
   '/shop/products': typeof ShopProductsRouteWithChildren
-  '/dashboard/admin/orders': typeof DashboardAdminOrdersRouteWithChildren
-  '/dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/shop/order/failure': typeof ShopOrderFailureRoute
   '/shop/order/pending': typeof ShopOrderPendingRoute
   '/shop/order/success': typeof ShopOrderSuccessRoute
   '/shop/products/$slug': typeof ShopProductsSlugRoute
-  '/dashboard/admin/orders/$orderId': typeof DashboardAdminOrdersOrderIdRoute
+  '/dashboard/': typeof authenticatedDashboardIndexRoute
+  '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
+  '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
+  '/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  '/dashboard/admin/orders': typeof authenticatedDashboardAdminOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/shop': typeof ShopRouteWithChildren
-  '/dashboard/orders': typeof DashboardOrdersRouteWithChildren
   '/shop/cart': typeof ShopCartRoute
   '/shop/checkout': typeof ShopCheckoutRoute
   '/shop/products': typeof ShopProductsRouteWithChildren
-  '/dashboard/admin/orders': typeof DashboardAdminOrdersRouteWithChildren
-  '/dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/shop/order/failure': typeof ShopOrderFailureRoute
   '/shop/order/pending': typeof ShopOrderPendingRoute
   '/shop/order/success': typeof ShopOrderSuccessRoute
   '/shop/products/$slug': typeof ShopProductsSlugRoute
-  '/dashboard/admin/orders/$orderId': typeof DashboardAdminOrdersOrderIdRoute
+  '/dashboard': typeof authenticatedDashboardIndexRoute
+  '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
+  '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
+  '/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  '/dashboard/admin/orders': typeof authenticatedDashboardAdminOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteWithChildren
+  '/(authenticated)': typeof authenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/shop': typeof ShopRouteWithChildren
-  '/dashboard/orders': typeof DashboardOrdersRouteWithChildren
+  '/(authenticated)/dashboard': typeof authenticatedDashboardRouteRouteWithChildren
   '/shop/cart': typeof ShopCartRoute
   '/shop/checkout': typeof ShopCheckoutRoute
   '/shop/products': typeof ShopProductsRouteWithChildren
-  '/dashboard/admin/orders': typeof DashboardAdminOrdersRouteWithChildren
-  '/dashboard/orders/$orderId': typeof DashboardOrdersOrderIdRoute
   '/shop/order/failure': typeof ShopOrderFailureRoute
   '/shop/order/pending': typeof ShopOrderPendingRoute
   '/shop/order/success': typeof ShopOrderSuccessRoute
   '/shop/products/$slug': typeof ShopProductsSlugRoute
-  '/dashboard/admin/orders/$orderId': typeof DashboardAdminOrdersOrderIdRoute
+  '/(authenticated)/dashboard/': typeof authenticatedDashboardIndexRoute
+  '/(authenticated)/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
+  '/(authenticated)/dashboard/orders/': typeof authenticatedDashboardOrdersIndexRoute
+  '/(authenticated)/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  '/(authenticated)/dashboard/admin/orders/': typeof authenticatedDashboardAdminOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/dashboard'
     | '/login'
     | '/shop'
-    | '/dashboard/orders'
+    | '/dashboard'
     | '/shop/cart'
     | '/shop/checkout'
     | '/shop/products'
-    | '/dashboard/admin/orders'
-    | '/dashboard/orders/$orderId'
     | '/shop/order/failure'
     | '/shop/order/pending'
     | '/shop/order/success'
     | '/shop/products/$slug'
+    | '/dashboard/'
+    | '/dashboard/orders/$orderId'
+    | '/dashboard/orders'
     | '/dashboard/admin/orders/$orderId'
+    | '/dashboard/admin/orders'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/dashboard'
     | '/login'
     | '/shop'
-    | '/dashboard/orders'
     | '/shop/cart'
     | '/shop/checkout'
     | '/shop/products'
-    | '/dashboard/admin/orders'
-    | '/dashboard/orders/$orderId'
     | '/shop/order/failure'
     | '/shop/order/pending'
     | '/shop/order/success'
     | '/shop/products/$slug'
+    | '/dashboard'
+    | '/dashboard/orders/$orderId'
+    | '/dashboard/orders'
     | '/dashboard/admin/orders/$orderId'
+    | '/dashboard/admin/orders'
   id:
     | '__root__'
     | '/'
-    | '/dashboard'
+    | '/(authenticated)'
     | '/login'
     | '/shop'
-    | '/dashboard/orders'
+    | '/(authenticated)/dashboard'
     | '/shop/cart'
     | '/shop/checkout'
     | '/shop/products'
-    | '/dashboard/admin/orders'
-    | '/dashboard/orders/$orderId'
     | '/shop/order/failure'
     | '/shop/order/pending'
     | '/shop/order/success'
     | '/shop/products/$slug'
-    | '/dashboard/admin/orders/$orderId'
+    | '/(authenticated)/dashboard/'
+    | '/(authenticated)/dashboard/orders/$orderId'
+    | '/(authenticated)/dashboard/orders/'
+    | '/(authenticated)/dashboard/admin/orders/$orderId'
+    | '/(authenticated)/dashboard/admin/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRouteWithChildren
+  authenticatedRouteRoute: typeof authenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   ShopRoute: typeof ShopRouteWithChildren
 }
@@ -231,11 +253,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+    '/(authenticated)': {
+      id: '/(authenticated)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof authenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -266,12 +288,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopCartRouteImport
       parentRoute: typeof ShopRoute
     }
-    '/dashboard/orders': {
-      id: '/dashboard/orders'
-      path: '/orders'
-      fullPath: '/dashboard/orders'
-      preLoaderRoute: typeof DashboardOrdersRouteImport
-      parentRoute: typeof DashboardRoute
+    '/(authenticated)/dashboard': {
+      id: '/(authenticated)/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof authenticatedDashboardRouteRouteImport
+      parentRoute: typeof authenticatedRouteRoute
+    }
+    '/(authenticated)/dashboard/': {
+      id: '/(authenticated)/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof authenticatedDashboardIndexRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
     }
     '/shop/products/$slug': {
       id: '/shop/products/$slug'
@@ -301,66 +330,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopOrderFailureRouteImport
       parentRoute: typeof ShopRoute
     }
-    '/dashboard/orders/$orderId': {
-      id: '/dashboard/orders/$orderId'
-      path: '/$orderId'
-      fullPath: '/dashboard/orders/$orderId'
-      preLoaderRoute: typeof DashboardOrdersOrderIdRouteImport
-      parentRoute: typeof DashboardOrdersRoute
+    '/(authenticated)/dashboard/orders/': {
+      id: '/(authenticated)/dashboard/orders/'
+      path: '/orders'
+      fullPath: '/dashboard/orders'
+      preLoaderRoute: typeof authenticatedDashboardOrdersIndexRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
     }
-    '/dashboard/admin/orders': {
-      id: '/dashboard/admin/orders'
+    '/(authenticated)/dashboard/orders/$orderId': {
+      id: '/(authenticated)/dashboard/orders/$orderId'
+      path: '/orders/$orderId'
+      fullPath: '/dashboard/orders/$orderId'
+      preLoaderRoute: typeof authenticatedDashboardOrdersOrderIdRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
+    }
+    '/(authenticated)/dashboard/admin/orders/': {
+      id: '/(authenticated)/dashboard/admin/orders/'
       path: '/admin/orders'
       fullPath: '/dashboard/admin/orders'
-      preLoaderRoute: typeof DashboardAdminOrdersRouteImport
-      parentRoute: typeof DashboardRoute
+      preLoaderRoute: typeof authenticatedDashboardAdminOrdersIndexRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
     }
-    '/dashboard/admin/orders/$orderId': {
-      id: '/dashboard/admin/orders/$orderId'
-      path: '/$orderId'
+    '/(authenticated)/dashboard/admin/orders/$orderId': {
+      id: '/(authenticated)/dashboard/admin/orders/$orderId'
+      path: '/admin/orders/$orderId'
       fullPath: '/dashboard/admin/orders/$orderId'
-      preLoaderRoute: typeof DashboardAdminOrdersOrderIdRouteImport
-      parentRoute: typeof DashboardAdminOrdersRoute
+      preLoaderRoute: typeof authenticatedDashboardAdminOrdersOrderIdRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
     }
   }
 }
 
-interface DashboardOrdersRouteChildren {
-  DashboardOrdersOrderIdRoute: typeof DashboardOrdersOrderIdRoute
+interface authenticatedDashboardRouteRouteChildren {
+  authenticatedDashboardIndexRoute: typeof authenticatedDashboardIndexRoute
+  authenticatedDashboardOrdersOrderIdRoute: typeof authenticatedDashboardOrdersOrderIdRoute
+  authenticatedDashboardOrdersIndexRoute: typeof authenticatedDashboardOrdersIndexRoute
+  authenticatedDashboardAdminOrdersOrderIdRoute: typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  authenticatedDashboardAdminOrdersIndexRoute: typeof authenticatedDashboardAdminOrdersIndexRoute
 }
 
-const DashboardOrdersRouteChildren: DashboardOrdersRouteChildren = {
-  DashboardOrdersOrderIdRoute: DashboardOrdersOrderIdRoute,
+const authenticatedDashboardRouteRouteChildren: authenticatedDashboardRouteRouteChildren =
+  {
+    authenticatedDashboardIndexRoute: authenticatedDashboardIndexRoute,
+    authenticatedDashboardOrdersOrderIdRoute:
+      authenticatedDashboardOrdersOrderIdRoute,
+    authenticatedDashboardOrdersIndexRoute:
+      authenticatedDashboardOrdersIndexRoute,
+    authenticatedDashboardAdminOrdersOrderIdRoute:
+      authenticatedDashboardAdminOrdersOrderIdRoute,
+    authenticatedDashboardAdminOrdersIndexRoute:
+      authenticatedDashboardAdminOrdersIndexRoute,
+  }
+
+const authenticatedDashboardRouteRouteWithChildren =
+  authenticatedDashboardRouteRoute._addFileChildren(
+    authenticatedDashboardRouteRouteChildren,
+  )
+
+interface authenticatedRouteRouteChildren {
+  authenticatedDashboardRouteRoute: typeof authenticatedDashboardRouteRouteWithChildren
 }
 
-const DashboardOrdersRouteWithChildren = DashboardOrdersRoute._addFileChildren(
-  DashboardOrdersRouteChildren,
-)
-
-interface DashboardAdminOrdersRouteChildren {
-  DashboardAdminOrdersOrderIdRoute: typeof DashboardAdminOrdersOrderIdRoute
+const authenticatedRouteRouteChildren: authenticatedRouteRouteChildren = {
+  authenticatedDashboardRouteRoute:
+    authenticatedDashboardRouteRouteWithChildren,
 }
 
-const DashboardAdminOrdersRouteChildren: DashboardAdminOrdersRouteChildren = {
-  DashboardAdminOrdersOrderIdRoute: DashboardAdminOrdersOrderIdRoute,
-}
-
-const DashboardAdminOrdersRouteWithChildren =
-  DashboardAdminOrdersRoute._addFileChildren(DashboardAdminOrdersRouteChildren)
-
-interface DashboardRouteChildren {
-  DashboardOrdersRoute: typeof DashboardOrdersRouteWithChildren
-  DashboardAdminOrdersRoute: typeof DashboardAdminOrdersRouteWithChildren
-}
-
-const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardOrdersRoute: DashboardOrdersRouteWithChildren,
-  DashboardAdminOrdersRoute: DashboardAdminOrdersRouteWithChildren,
-}
-
-const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-  DashboardRouteChildren,
-)
+const authenticatedRouteRouteWithChildren =
+  authenticatedRouteRoute._addFileChildren(authenticatedRouteRouteChildren)
 
 interface ShopProductsRouteChildren {
   ShopProductsSlugRoute: typeof ShopProductsSlugRoute
@@ -396,7 +433,7 @@ const ShopRouteWithChildren = ShopRoute._addFileChildren(ShopRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRouteWithChildren,
+  authenticatedRouteRoute: authenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   ShopRoute: ShopRouteWithChildren,
 }

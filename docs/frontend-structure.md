@@ -31,6 +31,19 @@ apps/web/src/
 │   ├── index.tsx                     # Home/landing page
 │   ├── login.tsx                     # Auth page
 │   │
+│   ├── (authenticated)/              # 🔐 Auth-required route group
+│   │   ├── route.tsx                 # Auth check wrapper
+│   │   └── dashboard/
+│   │       ├── route.tsx             # Dashboard layout with nav
+│   │       ├── index.tsx             # Dashboard home/overview
+│   │       ├── orders/
+│   │       │   ├── index.tsx         # User orders list
+│   │       │   └── $orderId.tsx      # Order detail
+│   │       └── admin/
+│   │           └── orders/
+│   │               ├── index.tsx     # Admin orders list
+│   │               └── $orderId.tsx  # Admin order detail
+│   │
 │   ├── shop.tsx                      # Shop layout (Outlet wrapper)
 │   ├── shop.products.tsx             # Product list
 │   ├── shop.products.$slug.tsx       # Product detail
@@ -38,13 +51,7 @@ apps/web/src/
 │   ├── shop.checkout.tsx             # Checkout flow
 │   ├── shop.order.success.tsx        # Order success
 │   ├── shop.order.failure.tsx        # Order failure
-│   ├── shop.order.pending.tsx        # Order pending
-│   │
-│   ├── dashboard.tsx                 # Dashboard layout (auth required)
-│   ├── dashboard.orders.tsx          # User orders list
-│   ├── dashboard.orders.$orderId.tsx # Order detail
-│   ├── dashboard.admin.orders.tsx    # Admin orders list
-│   └── dashboard.admin.orders.$orderId.tsx # Admin order detail
+│   └── shop.order.pending.tsx        # Order pending
 │
 ├── components/
 │   ├── header.tsx                    # Site header
@@ -74,74 +81,85 @@ apps/web/src/
 
 ### Principles
 
-1. **Flat route files, deep components** - Keep route files thin, extract to components/
-2. **Co-locate related components** - Group by feature (shop/, admin/, dashboard/)
-3. **Layout components** - Use `shop.tsx`, `dashboard.tsx` for nested route layouts
+1. **Route groups for auth** - Use `(authenticated)/` for protected routes
+2. **Nested folders, not flat dots** - `dashboard/orders/` not `dashboard.orders.tsx`
+3. **Layout components** - Use `route.tsx` files with `<Outlet />` for nested layouts
 4. **One job per file** - Route = data loading + page composition, Component = UI logic
 
 ---
 
 ## 2. Route Structure
 
-### Good: Layout Pattern with Outlet
+### ✅ Good: Route Group with Auth Check
 
 ```tsx
-// apps/web/src/routes/shop.tsx
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+// apps/web/src/routes/(authenticated)/route.tsx
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { authClient } from "@/lib/auth-client";
 
-export const Route = createFileRoute("/shop")({
-  component: ShopLayout,
+export const Route = createFileRoute("/(authenticated)")({
+  component: AuthenticatedLayout,
+  beforeLoad: async () => {
+    const session = await authClient.getSession();
+    if (!session.data) {
+      throw redirect({ to: "/login" });
+    }
+    return { session };
+  },
 });
 
-function ShopLayout() {
+function AuthenticatedLayout() {
+  return <Outlet />;  {/* All child routes are now auth-protected */}
+}
+```
+
+### Good: Nested Dashboard Layout
+
+```tsx
+// apps/web/src/routes/(authenticated)/dashboard/route.tsx
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/(authenticated)/dashboard")({
+  component: DashboardLayout,
+});
+
+function DashboardLayout() {
+  const { session } = Route.useRouteContext();
+  
   return (
-    <div className="min-h-screen bg-background">
-      <ShopHeader />
-      <main className="container mx-auto py-8">
-        <Outlet />  {/* Child routes render here */}
-      </main>
-      <ShopFooter />
+    <div className="container py-8">
+      <h1>Dashboard - {session.data?.user.name}</h1>
+      
+      {/* Navigation */}
+      <nav className="flex gap-2 mb-6">
+        <Link to="/dashboard">Overview</Link>
+        <Link to="/dashboard/orders">My Orders</Link>
+        <Link to="/dashboard/admin/orders">Admin</Link>
+      </nav>
+      
+      <Outlet />  {/* Child routes render here */}
     </div>
   );
 }
 ```
 
-### Good: Simple Route Component
-
 ```tsx
-// apps/web/src/routes/shop.products.tsx
-import { createFileRoute } from "@tanstack/react-router";
-import { ProductList } from "@/components/shop/product-list";
-
-export const Route = createFileRoute("/shop/products")({
-  component: ProductsPage,
-  loader: async () => {
-    // Prefetch products here
-    return { products: await fetchProducts() };
-  },
+// apps/web/src/routes/(authenticated)/dashboard/index.tsx
+export const Route = createFileRoute("/(authenticated)/dashboard/")({
+  component: DashboardOverview,
 });
 
-function ProductsPage() {
-  const { products } = Route.useLoaderData();
-  return <ProductList products={products} />;
+function DashboardOverview() {
+  return <div>Dashboard home content</div>;
 }
 ```
-
-### Bad: Bloated Route File (400+ lines)
 
 ```tsx
-// ❌ DON'T: Everything in one file
-// apps/web/src/routes/shop.cart.tsx (400 lines!)
-
-function CartPage() {
-  // 100 lines of state/hooks
-  // 300 lines of JSX
-  // Multiple components mixed in
-  // Hard to test, hard to maintain
-}
+// apps/web/src/routes/(authenticated)/dashboard/orders/index.tsx
+export const Route = createFileRoute("/(authenticated)/dashboard/orders/")({
+  component: OrdersList,
+});
 ```
-
-**Solution:** Extract to `components/shop/cart-page.tsx`
 
 ---
 
@@ -322,6 +340,36 @@ export const ordersApi = {
 ---
 
 ## 6. Common Pitfalls
+
+### ❌ Don't Use Flat Dot Notation for Nested Routes
+
+```tsx
+// ❌ BAD: Flat structure with dots (old TanStack Router style)
+routes/
+  dashboard.tsx
+  dashboard.orders.tsx
+  dashboard.orders.$orderId.tsx
+  dashboard.admin.orders.tsx
+```
+
+```tsx
+// ✅ GOOD: Use nested folders with route groups
+routes/
+  (authenticated)/
+    route.tsx                    # Auth check
+    dashboard/
+      route.tsx                  # Layout with nav
+      index.tsx                  # Dashboard home
+      orders/
+        index.tsx                # Orders list
+        $orderId.tsx             # Order detail
+```
+
+**Why?**
+- Better organization and discoverability
+- Shared layouts are explicit (`route.tsx`)
+- Auth checks applied at group level
+- Follows modern TanStack Router conventions
 
 ### ❌ Don't Use `asChild` with Base UI
 
