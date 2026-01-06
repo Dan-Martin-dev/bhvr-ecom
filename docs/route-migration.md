@@ -1,11 +1,13 @@
 # Route Structure Migration Guide
 
 **Date:** January 6, 2026  
-**Migration:** Flat Routes → Nested Route Groups  
+**Migrations:**
+- Dashboard Routes: Flat Routes → Nested Route Groups  
+- Shop Routes: Flat Routes → Nested Route Groups
 
 ---
 
-## What Changed
+## Dashboard Migration
 
 ### Before (Flat Structure)
 
@@ -34,6 +36,41 @@ routes/
             └── orders/
                 ├── index.tsx              # ✅ Admin list
                 └── $orderId.tsx           # ✅ Admin detail
+```
+
+---
+
+## Shop Migration
+
+### Before (Flat Structure)
+
+```
+routes/
+├── shop.tsx                               # 🔴 Flat layout
+├── shop.products.tsx                      # 🔴 Dot notation
+├── shop.products.$slug.tsx                # 🔴 Hard to organize
+├── shop.cart.tsx
+├── shop.checkout.tsx
+├── shop.order.success.tsx
+├── shop.order.pending.tsx
+└── shop.order.failure.tsx
+```
+
+### After (Nested Structure)
+
+```
+routes/
+└── (shop)/                                # ✅ Shop group
+    ├── route.tsx                          # ✅ Shared layout
+    ├── cart.tsx                           # ✅ Shopping cart
+    ├── checkout.tsx                       # ✅ Checkout flow
+    ├── products/
+    │   ├── index.tsx                      # ✅ Products list
+    │   └── $slug.tsx                      # ✅ Product detail
+    └── order/
+        ├── success.tsx                    # ✅ Order success
+        ├── pending.tsx                    # ✅ Order pending
+        └── failure.tsx                    # ✅ Order failure
 ```
 
 ---
@@ -333,6 +370,8 @@ export const Route = createFileRoute("/(authenticated)")({
 
 ## Summary
 
+### Dashboard Routes
+
 | Aspect | Before | After |
 |--------|--------|-------|
 | **Structure** | Flat with dots | Nested with folders |
@@ -341,6 +380,17 @@ export const Route = createFileRoute("/(authenticated)")({
 | **Navigation** | Per-route | Shared in layout |
 | **Discoverability** | Hard to find | Clear hierarchy |
 | **Maintainability** | Copy-paste | DRY principle |
+
+### Shop Routes
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| **Structure** | Flat with dots (`shop.cart.tsx`) | Nested folders (`(shop)/cart.tsx`) |
+| **Organization** | 8 files at root level | Organized in subdirectories |
+| **Products** | `shop.products.tsx`, `shop.products.$slug.tsx` | `products/index.tsx`, `products/$slug.tsx` |
+| **Orders** | `shop.order.success.tsx`, etc. | `order/success.tsx`, `order/pending.tsx`, `order/failure.tsx` |
+| **Layout** | Shared via `shop.tsx` | Shared via `(shop)/route.tsx` |
+| **URL Paths** | `/shop/products`, `/shop/cart` | `/products`, `/cart` (cleaner!) |
 
 **Result:** Cleaner, more maintainable, follows TanStack Router best practices! 🎉
 

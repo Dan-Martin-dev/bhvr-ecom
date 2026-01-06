@@ -37,7 +37,7 @@ function HomeComponent() {
             Self-hosted, type-safe, and blazing fast.
           </p>
           <div className="flex justify-center gap-4">
-            <Link to="/shop/products">
+            <Link to="/products">
               <Button size="lg">
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Browse Products
