@@ -47,6 +47,30 @@ make dev          # Hot reload everything
 
 ---
 
+## File Organization
+
+**See [Frontend Structure Guide](./frontend-structure.md) for detailed best practices.**
+
+### Key Principles
+
+```typescript
+// ✅ GOOD: Thin routes, extract components
+// apps/web/src/routes/shop.products.tsx (50 lines)
+export const Route = createFileRoute("/shop/products")({
+  component: () => <ProductList products={products} />,
+});
+
+// ❌ BAD: 400 line route files with inline everything
+```
+
+**Rules:**
+- Route files < 100 lines (data loading + composition)
+- Extract components to `components/shop/`, `components/dashboard/`
+- Use RPC helpers from `lib/api.ts` instead of raw fetch()
+- Create layout components (shop.tsx, dashboard.tsx) with `<Outlet />`
+
+---
+
 ## 2. Architecture Choices
 
 ### Your Current Setup is PERFECT for Solo Dev:
