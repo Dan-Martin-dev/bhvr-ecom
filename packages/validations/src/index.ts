@@ -8,6 +8,9 @@ export * from "./products";
 // Cart validations
 export * from "./cart";
 
+// Shipping validations (must come before orders due to shared types)
+export * from "./shipping";
+
 // Order validations
 export * from "./orders";
 

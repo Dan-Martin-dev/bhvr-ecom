@@ -231,6 +231,43 @@ export const cartItem = pgTable(
 );
 
 // ============================================================================
+// SHIPPING METHODS
+// ============================================================================
+
+export const shippingMethod = pgTable(
+  "shipping_method",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    // Base cost in centavos (ARS)
+    baseCost: integer("base_cost").notNull(),
+    // Cost per kg in centavos (for weight-based pricing)
+    costPerKg: integer("cost_per_kg").default(0).notNull(),
+    // Shipping zones this method applies to
+    zones: shippingZoneEnum("zones").array().notNull(),
+    // Estimated delivery time in days
+    minDeliveryDays: integer("min_delivery_days").notNull(),
+    maxDeliveryDays: integer("max_delivery_days").notNull(),
+    // Free shipping threshold in centavos
+    freeShippingThreshold: integer("free_shipping_threshold"),
+    // Active/inactive status
+    isActive: boolean("is_active").default(true).notNull(),
+    // Display order (lower numbers appear first)
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("shipping_method_active_idx").on(table.isActive),
+    index("shipping_method_sort_idx").on(table.sortOrder),
+  ],
+);
+
+// ============================================================================
 // ORDERS
 // ============================================================================
 
@@ -269,6 +306,13 @@ export const order = pgTable(
     }).notNull(),
     shippingZone: shippingZoneEnum("shipping_zone").notNull(),
     shippingNotes: text("shipping_notes"),
+    // Shipping method reference (snapshot info for consistency)
+    shippingMethodId: uuid("shipping_method_id").references(
+      () => shippingMethod.id,
+      { onDelete: "set null" },
+    ),
+    shippingMethodName: varchar("shipping_method_name", { length: 100 }),
+    shippingEstimatedDays: integer("shipping_estimated_days"),
     // Tracking
     trackingNumber: varchar("tracking_number", { length: 100 }),
     trackingUrl: text("tracking_url"),
@@ -480,6 +524,10 @@ export const orderRelations = relations(order, ({ one, many }) => ({
     fields: [order.userId],
     references: [user.id],
   }),
+  shippingMethod: one(shippingMethod, {
+    fields: [order.shippingMethodId],
+    references: [shippingMethod.id],
+  }),
   items: many(orderItem),
   reviews: many(review),
 }));
@@ -519,4 +567,8 @@ export const wishlistItemRelations = relations(wishlistItem, ({ one }) => ({
     fields: [wishlistItem.productId],
     references: [product.id],
   }),
+}));
+
+export const shippingMethodRelations = relations(shippingMethod, ({ many }) => ({
+  orders: many(order),
 }));

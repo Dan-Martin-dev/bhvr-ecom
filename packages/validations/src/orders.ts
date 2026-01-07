@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { shippingZoneEnum, type ShippingZone } from "./shipping";
 
 // ============================================================================
 // ADDRESS SCHEMAS
@@ -27,8 +28,6 @@ export const savedAddressSchema = addressSchema.extend({
 // ============================================================================
 // ORDER SCHEMAS
 // ============================================================================
-
-export const shippingZoneEnum = z.enum(["amba", "interior", "pickup"]);
 
 export const orderStatusEnum = z.enum([
   "pending",
@@ -132,7 +131,7 @@ export const applyCouponSchema = z.object({
 
 export type Address = z.infer<typeof addressSchema>;
 export type SavedAddress = z.infer<typeof savedAddressSchema>;
-export type ShippingZone = z.infer<typeof shippingZoneEnum>;
+export type { ShippingZone }; // Re-export from shipping module
 export type OrderStatus = z.infer<typeof orderStatusEnum>;
 export type PaymentStatus = z.infer<typeof paymentStatusEnum>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;

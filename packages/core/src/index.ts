@@ -10,3 +10,6 @@ export * from "./cart";
 
 // Order use cases
 export * from "./orders";
+
+// Shipping use cases
+export * from "./shipping";

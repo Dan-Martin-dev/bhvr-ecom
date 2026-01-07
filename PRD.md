@@ -79,7 +79,7 @@ bhvr-ecom is an open-source e-commerce boilerplate for developers seeking comple
 | ------- | -------- | ------ |
 | Multi-step Checkout | P0 | ✅ |
 | Shipping Address | P0 | ✅ |
-| Shipping Methods | P1 | ⏳ |
+| Shipping Methods | P1 | ✅ |
 | Mercado Pago Integration | P0 | ✅ |
 | Order Creation | P0 | ✅ |
 | Order History | P1 | ✅ |
