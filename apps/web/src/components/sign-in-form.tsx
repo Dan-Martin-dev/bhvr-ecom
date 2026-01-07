@@ -1,5 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -91,7 +91,15 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           <form.Field name="password">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor={field.name}>Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={field.name}>Password</Label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id={field.name}
                   name={field.name}

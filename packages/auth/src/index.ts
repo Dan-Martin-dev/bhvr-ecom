@@ -13,6 +13,14 @@ export const auth = betterAuth({
   trustedOrigins: [env.CORS_ORIGIN],
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      // TODO: Integrate with email service when notifications are implemented
+      console.log(`Password reset for ${user.email}:`);
+      console.log(`Reset URL: ${url}`);
+      
+      // For now, log to console for development
+      // In production, this should send an actual email
+    },
   },
   advanced: {
     defaultCookieAttributes: {

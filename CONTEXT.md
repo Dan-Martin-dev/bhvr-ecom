@@ -41,6 +41,7 @@ packages/
 - ✅ Admin product management (CRUD interface) implemented
 - ✅ Guest cart with localStorage and auto-merge on login
 - ✅ Shipping methods with cost calculations and delivery estimates
+- ✅ Password reset with email verification flow
 - ✅ Routes migrated to nested structure with route groups
 
 ## Rules
