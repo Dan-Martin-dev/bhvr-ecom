@@ -5,6 +5,9 @@
 // Product validations
 export * from "./products";
 
+// Product variant validations
+export * from "./variants";
+
 // Cart validations
 export * from "./cart";
 

@@ -5,6 +5,9 @@
 // Product use cases
 export * from "./products";
 
+// Product variant use cases
+export * from "./variants";
+
 // Cart use cases
 export * from "./cart";
 

@@ -10,6 +10,10 @@
       "types": "./src/products/index.ts",
       "default": "./src/products/index.ts"
     },
+    "./variants": {
+      "types": "./src/variants/index.ts",
+      "default": "./src/variants/index.ts"
+    },
     "./cart": {
       "types": "./src/cart/index.ts",
       "default": "./src/cart/index.ts"

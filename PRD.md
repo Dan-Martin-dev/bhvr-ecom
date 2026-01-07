@@ -57,7 +57,7 @@ bhvr-ecom is an open-source e-commerce boilerplate for developers seeking comple
 | Feature | Priority | Status |
 | ------- | -------- | ------ |
 | Product CRUD | P0 | ✅ |
-| Product Variants | P1 | ⏳ |
+| Product Variants | P1 | ✅ |
 | Categories | P0 | ✅ |
 | Product Images | P0 | ✅ |
 | Inventory Tracking | P0 | ✅ |

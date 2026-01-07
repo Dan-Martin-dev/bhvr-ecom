@@ -139,6 +139,54 @@ export const productImage = pgTable(
 );
 
 // ============================================================================
+// PRODUCT VARIANTS
+// ============================================================================
+
+export const productVariant = pgTable(
+  "product_variant",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    // Variant attributes (size, color, etc.)
+    name: varchar("name", { length: 255 }).notNull(), // e.g., "M / Azul"
+    // Individual variant options
+    size: varchar("size", { length: 50 }), // e.g., "S", "M", "L", "XL", "42", "10.5"
+    color: varchar("color", { length: 50 }), // e.g., "Azul", "Rojo", "Negro"
+    material: varchar("material", { length: 50 }), // e.g., "Algodón", "Poliéster"
+    style: varchar("style", { length: 50 }), // e.g., "Slim Fit", "Regular"
+    // Unique SKU for this variant
+    sku: varchar("sku", { length: 100 }).notNull().unique(),
+    barcode: varchar("barcode", { length: 100 }),
+    // Price override (if null, use product base price)
+    price: integer("price"), // In centavos (ARS)
+    compareAtPrice: integer("compare_at_price"),
+    // Separate inventory per variant
+    stock: integer("stock").default(0).notNull(),
+    // Weight override (if null, use product weight)
+    weight: integer("weight"), // In grams
+    // Image specific to this variant (if any)
+    imageId: uuid("image_id").references(() => productImage.id, {
+      onDelete: "set null",
+    }),
+    // Variant-specific attributes
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("product_variant_product_idx").on(table.productId),
+    index("product_variant_sku_idx").on(table.sku),
+    index("product_variant_active_idx").on(table.isActive),
+  ],
+);
+
+// ============================================================================
 // ADDRESSES
 // ============================================================================
 
@@ -480,16 +528,29 @@ export const productRelations = relations(product, ({ one, many }) => ({
     references: [category.id],
   }),
   images: many(productImage),
+  variants: many(productVariant),
   reviews: many(review),
   cartItems: many(cartItem),
   orderItems: many(orderItem),
   wishlistItems: many(wishlistItem),
 }));
 
-export const productImageRelations = relations(productImage, ({ one }) => ({
+export const productImageRelations = relations(productImage, ({ one, many }) => ({
   product: one(product, {
     fields: [productImage.productId],
     references: [product.id],
+  }),
+  variants: many(productVariant),
+}));
+
+export const productVariantRelations = relations(productVariant, ({ one }) => ({
+  product: one(product, {
+    fields: [productVariant.productId],
+    references: [product.id],
+  }),
+  image: one(productImage, {
+    fields: [productVariant.imageId],
+    references: [productImage.id],
   }),
 }));
 

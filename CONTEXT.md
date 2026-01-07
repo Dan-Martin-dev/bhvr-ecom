@@ -36,6 +36,7 @@ packages/
 ## Current State
 
 - ✅ Products, Cart, Checkout, Orders implemented
+- ✅ Product Variants (size, color, material, style) with separate inventory
 - ✅ Mercado Pago payments integrated
 - ✅ Admin dashboard functional
 - ✅ Admin product management (CRUD interface) implemented
