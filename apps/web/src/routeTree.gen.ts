@@ -24,8 +24,11 @@ import { Route as shopOrderPendingRouteImport } from './routes/(shop)/order/pend
 import { Route as shopOrderFailureRouteImport } from './routes/(shop)/order/failure'
 import { Route as authenticatedDashboardOrdersIndexRouteImport } from './routes/(authenticated)/dashboard/orders/index'
 import { Route as authenticatedDashboardOrdersOrderIdRouteImport } from './routes/(authenticated)/dashboard/orders/$orderId'
+import { Route as authenticatedDashboardAdminProductsIndexRouteImport } from './routes/(authenticated)/dashboard/admin/products/index'
 import { Route as authenticatedDashboardAdminOrdersIndexRouteImport } from './routes/(authenticated)/dashboard/admin/orders/index'
+import { Route as authenticatedDashboardAdminProductsCreateRouteImport } from './routes/(authenticated)/dashboard/admin/products/create'
 import { Route as authenticatedDashboardAdminOrdersOrderIdRouteImport } from './routes/(authenticated)/dashboard/admin/orders/$orderId'
+import { Route as authenticatedDashboardAdminProductsProductIdEditRouteImport } from './routes/(authenticated)/dashboard/admin/products/$productId/edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -104,16 +107,34 @@ const authenticatedDashboardOrdersOrderIdRoute =
     path: '/orders/$orderId',
     getParentRoute: () => authenticatedDashboardRouteRoute,
   } as any)
+const authenticatedDashboardAdminProductsIndexRoute =
+  authenticatedDashboardAdminProductsIndexRouteImport.update({
+    id: '/admin/products/',
+    path: '/admin/products/',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
 const authenticatedDashboardAdminOrdersIndexRoute =
   authenticatedDashboardAdminOrdersIndexRouteImport.update({
     id: '/admin/orders/',
     path: '/admin/orders/',
     getParentRoute: () => authenticatedDashboardRouteRoute,
   } as any)
+const authenticatedDashboardAdminProductsCreateRoute =
+  authenticatedDashboardAdminProductsCreateRouteImport.update({
+    id: '/admin/products/create',
+    path: '/admin/products/create',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
 const authenticatedDashboardAdminOrdersOrderIdRoute =
   authenticatedDashboardAdminOrdersOrderIdRouteImport.update({
     id: '/admin/orders/$orderId',
     path: '/admin/orders/$orderId',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
+const authenticatedDashboardAdminProductsProductIdEditRoute =
+  authenticatedDashboardAdminProductsProductIdEditRouteImport.update({
+    id: '/admin/products/$productId/edit',
+    path: '/admin/products/$productId/edit',
     getParentRoute: () => authenticatedDashboardRouteRoute,
   } as any)
 
@@ -132,7 +153,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
   '/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  '/dashboard/admin/products/create': typeof authenticatedDashboardAdminProductsCreateRoute
   '/dashboard/admin/orders': typeof authenticatedDashboardAdminOrdersIndexRoute
+  '/dashboard/admin/products': typeof authenticatedDashboardAdminProductsIndexRoute
+  '/dashboard/admin/products/$productId/edit': typeof authenticatedDashboardAdminProductsProductIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,7 +172,10 @@ export interface FileRoutesByTo {
   '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
   '/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  '/dashboard/admin/products/create': typeof authenticatedDashboardAdminProductsCreateRoute
   '/dashboard/admin/orders': typeof authenticatedDashboardAdminOrdersIndexRoute
+  '/dashboard/admin/products': typeof authenticatedDashboardAdminProductsIndexRoute
+  '/dashboard/admin/products/$productId/edit': typeof authenticatedDashboardAdminProductsProductIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,7 +195,10 @@ export interface FileRoutesById {
   '/(authenticated)/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/(authenticated)/dashboard/orders/': typeof authenticatedDashboardOrdersIndexRoute
   '/(authenticated)/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  '/(authenticated)/dashboard/admin/products/create': typeof authenticatedDashboardAdminProductsCreateRoute
   '/(authenticated)/dashboard/admin/orders/': typeof authenticatedDashboardAdminOrdersIndexRoute
+  '/(authenticated)/dashboard/admin/products/': typeof authenticatedDashboardAdminProductsIndexRoute
+  '/(authenticated)/dashboard/admin/products/$productId/edit': typeof authenticatedDashboardAdminProductsProductIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,7 +217,10 @@ export interface FileRouteTypes {
     | '/dashboard/orders/$orderId'
     | '/dashboard/orders'
     | '/dashboard/admin/orders/$orderId'
+    | '/dashboard/admin/products/create'
     | '/dashboard/admin/orders'
+    | '/dashboard/admin/products'
+    | '/dashboard/admin/products/$productId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -203,7 +236,10 @@ export interface FileRouteTypes {
     | '/dashboard/orders/$orderId'
     | '/dashboard/orders'
     | '/dashboard/admin/orders/$orderId'
+    | '/dashboard/admin/products/create'
     | '/dashboard/admin/orders'
+    | '/dashboard/admin/products'
+    | '/dashboard/admin/products/$productId/edit'
   id:
     | '__root__'
     | '/'
@@ -222,7 +258,10 @@ export interface FileRouteTypes {
     | '/(authenticated)/dashboard/orders/$orderId'
     | '/(authenticated)/dashboard/orders/'
     | '/(authenticated)/dashboard/admin/orders/$orderId'
+    | '/(authenticated)/dashboard/admin/products/create'
     | '/(authenticated)/dashboard/admin/orders/'
+    | '/(authenticated)/dashboard/admin/products/'
+    | '/(authenticated)/dashboard/admin/products/$productId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -339,6 +378,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authenticatedDashboardOrdersOrderIdRouteImport
       parentRoute: typeof authenticatedDashboardRouteRoute
     }
+    '/(authenticated)/dashboard/admin/products/': {
+      id: '/(authenticated)/dashboard/admin/products/'
+      path: '/admin/products'
+      fullPath: '/dashboard/admin/products'
+      preLoaderRoute: typeof authenticatedDashboardAdminProductsIndexRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
+    }
     '/(authenticated)/dashboard/admin/orders/': {
       id: '/(authenticated)/dashboard/admin/orders/'
       path: '/admin/orders'
@@ -346,11 +392,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authenticatedDashboardAdminOrdersIndexRouteImport
       parentRoute: typeof authenticatedDashboardRouteRoute
     }
+    '/(authenticated)/dashboard/admin/products/create': {
+      id: '/(authenticated)/dashboard/admin/products/create'
+      path: '/admin/products/create'
+      fullPath: '/dashboard/admin/products/create'
+      preLoaderRoute: typeof authenticatedDashboardAdminProductsCreateRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
+    }
     '/(authenticated)/dashboard/admin/orders/$orderId': {
       id: '/(authenticated)/dashboard/admin/orders/$orderId'
       path: '/admin/orders/$orderId'
       fullPath: '/dashboard/admin/orders/$orderId'
       preLoaderRoute: typeof authenticatedDashboardAdminOrdersOrderIdRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
+    }
+    '/(authenticated)/dashboard/admin/products/$productId/edit': {
+      id: '/(authenticated)/dashboard/admin/products/$productId/edit'
+      path: '/admin/products/$productId/edit'
+      fullPath: '/dashboard/admin/products/$productId/edit'
+      preLoaderRoute: typeof authenticatedDashboardAdminProductsProductIdEditRouteImport
       parentRoute: typeof authenticatedDashboardRouteRoute
     }
   }
@@ -361,7 +421,10 @@ interface authenticatedDashboardRouteRouteChildren {
   authenticatedDashboardOrdersOrderIdRoute: typeof authenticatedDashboardOrdersOrderIdRoute
   authenticatedDashboardOrdersIndexRoute: typeof authenticatedDashboardOrdersIndexRoute
   authenticatedDashboardAdminOrdersOrderIdRoute: typeof authenticatedDashboardAdminOrdersOrderIdRoute
+  authenticatedDashboardAdminProductsCreateRoute: typeof authenticatedDashboardAdminProductsCreateRoute
   authenticatedDashboardAdminOrdersIndexRoute: typeof authenticatedDashboardAdminOrdersIndexRoute
+  authenticatedDashboardAdminProductsIndexRoute: typeof authenticatedDashboardAdminProductsIndexRoute
+  authenticatedDashboardAdminProductsProductIdEditRoute: typeof authenticatedDashboardAdminProductsProductIdEditRoute
 }
 
 const authenticatedDashboardRouteRouteChildren: authenticatedDashboardRouteRouteChildren =
@@ -373,8 +436,14 @@ const authenticatedDashboardRouteRouteChildren: authenticatedDashboardRouteRoute
       authenticatedDashboardOrdersIndexRoute,
     authenticatedDashboardAdminOrdersOrderIdRoute:
       authenticatedDashboardAdminOrdersOrderIdRoute,
+    authenticatedDashboardAdminProductsCreateRoute:
+      authenticatedDashboardAdminProductsCreateRoute,
     authenticatedDashboardAdminOrdersIndexRoute:
       authenticatedDashboardAdminOrdersIndexRoute,
+    authenticatedDashboardAdminProductsIndexRoute:
+      authenticatedDashboardAdminProductsIndexRoute,
+    authenticatedDashboardAdminProductsProductIdEditRoute:
+      authenticatedDashboardAdminProductsProductIdEditRoute,
   }
 
 const authenticatedDashboardRouteRouteWithChildren =
