@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { useCart } from "@/lib/use-cart";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/(shop)/cart")({
   component: CartPage,
@@ -25,103 +25,21 @@ interface CartItem {
   };
 }
 
-interface Cart {
-  id: string;
-  items: CartItem[];
-  subtotal: number;
-  total: number;
-}
-
 function CartPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { data: session } = authClient.useSession();
+  const isAuthenticated = !!session?.user;
 
-  // Fetch cart
-  const { data: cart, isLoading } = useQuery<Cart>({
-    queryKey: ["cart"],
-    queryFn: async () => {
-      const response = await fetch("/api/cart", {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to fetch cart");
-      return response.json();
-    },
-  });
-
-  // Update quantity mutation
-  const updateQuantityMutation = useMutation({
-    mutationFn: async ({
-      cartItemId,
-      quantity,
-    }: {
-      cartItemId: string;
-      quantity: number;
-    }) => {
-      const response = await fetch(`/api/cart/items/\${cartItemId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ quantity }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update quantity");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  // Remove item mutation
-  const removeItemMutation = useMutation({
-    mutationFn: async (cartItemId: string) => {
-      const response = await fetch(`/api/cart/items/\${cartItemId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to remove item");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      toast.success("Item removed from cart");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  // Clear cart mutation
-  const clearCartMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/cart", {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!response.ok) throw new Error("Failed to clear cart");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      toast.success("Cart cleared");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
+  const {
+    cart,
+    isLoading,
+    error,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    isUpdating,
+    isRemoving,
+  } = useCart(isAuthenticated);
 
   const formatPrice = (priceInCents: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -133,19 +51,19 @@ function CartPage() {
   const handleQuantityChange = (cartItemId: string, delta: number, currentQuantity: number, maxStock: number) => {
     const newQuantity = currentQuantity + delta;
     if (newQuantity >= 1 && newQuantity <= maxStock) {
-      updateQuantityMutation.mutate({ cartItemId, quantity: newQuantity });
+      updateQuantity({ cartItemId, quantity: newQuantity });
     }
   };
 
   const handleRemoveItem = (cartItemId: string) => {
     if (confirm("Remove this item from cart?")) {
-      removeItemMutation.mutate(cartItemId);
+      removeItem(cartItemId);
     }
   };
 
   const handleClearCart = () => {
     if (confirm("Clear all items from cart?")) {
-      clearCartMutation.mutate();
+      clearCart();
     }
   };
 
@@ -171,7 +89,7 @@ function CartPage() {
             variant="outline"
             size="sm"
             onClick={handleClearCart}
-            disabled={clearCartMutation.isPending}
+            disabled={isUpdating || isRemoving}
           >
             Clear Cart
           </Button>
@@ -260,7 +178,7 @@ function CartPage() {
                             }
                             disabled={
                               item.quantity <= 1 ||
-                              updateQuantityMutation.isPending
+                              isUpdating
                             }
                           >
                             <Minus className="h-3 w-3" />
@@ -282,7 +200,7 @@ function CartPage() {
                             }
                             disabled={
                               item.quantity >= item.product.stock ||
-                              updateQuantityMutation.isPending
+                              isUpdating
                             }
                           >
                             <Plus className="h-3 w-3" />
@@ -294,7 +212,7 @@ function CartPage() {
                           size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => handleRemoveItem(item.id)}
-                          disabled={removeItemMutation.isPending}
+                          disabled={isRemoving}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

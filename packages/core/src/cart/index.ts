@@ -179,8 +179,22 @@ export async function removeFromCart(cartItemId: string) {
 // CLEAR CART
 // ============================================================================
 
-export async function clearCart(cartId: string) {
-  await db.delete(cartItem).where(eq(cartItem.cartId, cartId));
+export async function clearCart(userId?: string, sessionId?: string) {
+  if (!userId && !sessionId) {
+    throw new Error("Either userId or sessionId is required");
+  }
+
+  const userCart = await db.query.cart.findFirst({
+    where: userId
+      ? eq(cart.userId, userId)
+      : eq(cart.sessionId, sessionId!),
+  });
+
+  if (!userCart) {
+    return { success: true };
+  }
+
+  await db.delete(cartItem).where(eq(cartItem.cartId, userCart.id));
   return { success: true };
 }
 
@@ -282,4 +296,13 @@ export async function transferCartToUser(sessionId: string, userId: string) {
       })
       .where(eq(cart.sessionId, sessionId));
   }
+}
+
+// ============================================================================
+// MERGE GUEST CART (public API for merging on login)
+// ============================================================================
+
+export async function mergeGuestCart(userId: string, guestSessionId: string) {
+  await syncGuestCart(userId, guestSessionId);
+  return getCartWithTotals(userId);
 }

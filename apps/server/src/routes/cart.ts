@@ -2,21 +2,40 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { addToCartSchema, updateCartItemSchema } from "@bhvr-ecom/validations";
 import * as cartUseCases from "@bhvr-ecom/core/cart";
-import { authMiddleware } from "../middleware/auth";
+import { optionalAuth } from "../middleware/auth";
 import type { AppEnv } from "../types";
 
 const cart = new Hono<AppEnv>()
-  .use("/*", authMiddleware)
+  // Use optionalAuth to support both authenticated and guest users
+  .use("/*", optionalAuth)
   .get("/", async (c) => {
     const user = c.get("user");
-    const result = await cartUseCases.getOrCreateCart(user.id);
+    const sessionId = c.req.header("x-session-id");
+    
+    if (!user && !sessionId) {
+      return c.json({ error: "User or session ID required" }, 400);
+    }
+    
+    const result = await cartUseCases.getOrCreateCart(
+      user?.id,
+      sessionId
+    );
     return c.json(result);
   })
   .post("/items", zValidator("json", addToCartSchema), async (c) => {
     const user = c.get("user");
+    const sessionId = c.req.header("x-session-id");
     const data = c.req.valid("json");
     
-    const result = await cartUseCases.addToCart(data, user.id);
+    if (!user && !sessionId) {
+      return c.json({ error: "User or session ID required" }, 400);
+    }
+    
+    const result = await cartUseCases.addToCart(
+      data,
+      user?.id,
+      sessionId
+    );
     return c.json(result, 201);
   })
   .put("/items/:cartItemId", zValidator("json", updateCartItemSchema.omit({ cartItemId: true })), async (c) => {
@@ -37,8 +56,31 @@ const cart = new Hono<AppEnv>()
   })
   .delete("/", async (c) => {
     const user = c.get("user");
-    await cartUseCases.clearCart(user.id);
+    const sessionId = c.req.header("x-session-id");
+    
+    if (!user && !sessionId) {
+      return c.json({ error: "User or session ID required" }, 400);
+    }
+    
+    await cartUseCases.clearCart(user?.id, sessionId);
     return c.json({ success: true });
+  })
+  // Merge guest cart with user cart on login
+  .post("/merge", async (c) => {
+    const user = c.get("user");
+    
+    if (!user) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
+    
+    const sessionId = c.req.header("x-session-id");
+    
+    if (!sessionId) {
+      return c.json({ error: "Session ID required" }, 400);
+    }
+    
+    const result = await cartUseCases.mergeGuestCart(user.id, sessionId);
+    return c.json(result);
   });
 
 export default cart;

@@ -39,6 +39,7 @@ packages/
 - ✅ Mercado Pago payments integrated
 - ✅ Admin dashboard functional
 - ✅ Admin product management (CRUD interface) implemented
+- ✅ Guest cart with localStorage and auto-merge on login
 - ✅ Routes migrated to nested structure with route groups
 
 ## Rules
@@ -151,6 +152,12 @@ make db-push  # Push schema changes
   - Create product form with validation
   - Edit product form with real-time updates
   - Delete functionality with confirmation
+- Implemented guest cart with localStorage
+  - `lib/guest-cart.ts` service for client-side cart management
+  - `lib/use-cart.ts` hook supporting both guest and authenticated users
+  - Cart routes updated to accept `x-session-id` header for guests
+  - Auto-merge guest cart with user cart on login via `/api/cart/merge`
+  - Session ID persisted across page refreshes
 
 ---
 

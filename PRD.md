@@ -70,8 +70,8 @@ bhvr-ecom is an open-source e-commerce boilerplate for developers seeking comple
 | ------- | -------- | ------ |
 | Add/Update/Remove Items | P0 | ✅ |
 | Cart Persistence | P0 | ✅ |
-| Guest Cart | P1 | ⏳ |
-| Cart Merge on Login | P1 | ⏳ |
+| Guest Cart | P1 | ✅ |
+| Cart Merge on Login | P1 | ✅ |
 
 ### 2.4 Checkout & Orders
 
@@ -90,7 +90,7 @@ bhvr-ecom is an open-source e-commerce boilerplate for developers seeking comple
 | Feature | Priority | Status |
 | ------- | -------- | ------ |
 | Order Management | P0 | ✅ |
-| Product Management | P0 | ⏳ |
+| Product Management | P0 | ✅ |
 | Customer Management | P1 | ⏳ |
 | Dashboard Stats | P1 | ⏳ |
 
