@@ -66,9 +66,9 @@ function DashboardPage() {
             <p className="text-sm text-muted-foreground mb-4">
               Manage customer accounts and data
             </p>
-            <Button className="w-full" variant="secondary" disabled>
-              Coming Soon
-            </Button>
+            <Link to="/dashboard/admin/customers">
+              <Button className="w-full">View Customers</Button>
+            </Link>
           </CardContent>
         </Card>
 

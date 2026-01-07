@@ -14,6 +14,10 @@
       "types": "./src/variants/index.ts",
       "default": "./src/variants/index.ts"
     },
+    "./customers": {
+      "types": "./src/customers/index.ts",
+      "default": "./src/customers/index.ts"
+    },
     "./cart": {
       "types": "./src/cart/index.ts",
       "default": "./src/cart/index.ts"

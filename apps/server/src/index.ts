@@ -12,6 +12,7 @@ import orders from "./routes/orders";
 import checkout from "./routes/checkout";
 import shipping from "./routes/shipping";
 import variants from "./routes/variants";
+import customers from "./routes/customers";
 import webhooks from "./routes/webhooks";
 import admin from "./routes/admin";
 import type { AppEnv } from "./types";
@@ -72,6 +73,7 @@ const api = app
   .route("/checkout", checkout)
   .route("/shipping", shipping)
   .route("/variants", variants)
+  .route("/customers", customers)
   .route("/webhooks", webhooks)
   .route("/admin", admin);
 

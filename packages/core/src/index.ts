@@ -8,6 +8,9 @@ export * from "./products";
 // Product variant use cases
 export * from "./variants";
 
+// Customer use cases
+export * from "./customers";
+
 // Cart use cases
 export * from "./cart";
 

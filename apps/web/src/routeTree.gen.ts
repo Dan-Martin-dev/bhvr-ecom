@@ -28,8 +28,10 @@ import { Route as authenticatedDashboardOrdersIndexRouteImport } from './routes/
 import { Route as authenticatedDashboardOrdersOrderIdRouteImport } from './routes/(authenticated)/dashboard/orders/$orderId'
 import { Route as authenticatedDashboardAdminProductsIndexRouteImport } from './routes/(authenticated)/dashboard/admin/products/index'
 import { Route as authenticatedDashboardAdminOrdersIndexRouteImport } from './routes/(authenticated)/dashboard/admin/orders/index'
+import { Route as authenticatedDashboardAdminCustomersIndexRouteImport } from './routes/(authenticated)/dashboard/admin/customers/index'
 import { Route as authenticatedDashboardAdminProductsCreateRouteImport } from './routes/(authenticated)/dashboard/admin/products/create'
 import { Route as authenticatedDashboardAdminOrdersOrderIdRouteImport } from './routes/(authenticated)/dashboard/admin/orders/$orderId'
+import { Route as authenticatedDashboardAdminCustomersCustomerIdRouteImport } from './routes/(authenticated)/dashboard/admin/customers/$customerId'
 import { Route as authenticatedDashboardAdminProductsProductIdEditRouteImport } from './routes/(authenticated)/dashboard/admin/products/$productId/edit'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -131,6 +133,12 @@ const authenticatedDashboardAdminOrdersIndexRoute =
     path: '/admin/orders/',
     getParentRoute: () => authenticatedDashboardRouteRoute,
   } as any)
+const authenticatedDashboardAdminCustomersIndexRoute =
+  authenticatedDashboardAdminCustomersIndexRouteImport.update({
+    id: '/admin/customers/',
+    path: '/admin/customers/',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
 const authenticatedDashboardAdminProductsCreateRoute =
   authenticatedDashboardAdminProductsCreateRouteImport.update({
     id: '/admin/products/create',
@@ -141,6 +149,12 @@ const authenticatedDashboardAdminOrdersOrderIdRoute =
   authenticatedDashboardAdminOrdersOrderIdRouteImport.update({
     id: '/admin/orders/$orderId',
     path: '/admin/orders/$orderId',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
+const authenticatedDashboardAdminCustomersCustomerIdRoute =
+  authenticatedDashboardAdminCustomersCustomerIdRouteImport.update({
+    id: '/admin/customers/$customerId',
+    path: '/admin/customers/$customerId',
     getParentRoute: () => authenticatedDashboardRouteRoute,
   } as any)
 const authenticatedDashboardAdminProductsProductIdEditRoute =
@@ -166,8 +180,10 @@ export interface FileRoutesByFullPath {
   '/products': typeof shopProductsIndexRoute
   '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
+  '/dashboard/admin/customers/$customerId': typeof authenticatedDashboardAdminCustomersCustomerIdRoute
   '/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
   '/dashboard/admin/products/create': typeof authenticatedDashboardAdminProductsCreateRoute
+  '/dashboard/admin/customers': typeof authenticatedDashboardAdminCustomersIndexRoute
   '/dashboard/admin/orders': typeof authenticatedDashboardAdminOrdersIndexRoute
   '/dashboard/admin/products': typeof authenticatedDashboardAdminProductsIndexRoute
   '/dashboard/admin/products/$productId/edit': typeof authenticatedDashboardAdminProductsProductIdEditRoute
@@ -187,8 +203,10 @@ export interface FileRoutesByTo {
   '/products': typeof shopProductsIndexRoute
   '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
+  '/dashboard/admin/customers/$customerId': typeof authenticatedDashboardAdminCustomersCustomerIdRoute
   '/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
   '/dashboard/admin/products/create': typeof authenticatedDashboardAdminProductsCreateRoute
+  '/dashboard/admin/customers': typeof authenticatedDashboardAdminCustomersIndexRoute
   '/dashboard/admin/orders': typeof authenticatedDashboardAdminOrdersIndexRoute
   '/dashboard/admin/products': typeof authenticatedDashboardAdminProductsIndexRoute
   '/dashboard/admin/products/$productId/edit': typeof authenticatedDashboardAdminProductsProductIdEditRoute
@@ -212,8 +230,10 @@ export interface FileRoutesById {
   '/(shop)/products/': typeof shopProductsIndexRoute
   '/(authenticated)/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/(authenticated)/dashboard/orders/': typeof authenticatedDashboardOrdersIndexRoute
+  '/(authenticated)/dashboard/admin/customers/$customerId': typeof authenticatedDashboardAdminCustomersCustomerIdRoute
   '/(authenticated)/dashboard/admin/orders/$orderId': typeof authenticatedDashboardAdminOrdersOrderIdRoute
   '/(authenticated)/dashboard/admin/products/create': typeof authenticatedDashboardAdminProductsCreateRoute
+  '/(authenticated)/dashboard/admin/customers/': typeof authenticatedDashboardAdminCustomersIndexRoute
   '/(authenticated)/dashboard/admin/orders/': typeof authenticatedDashboardAdminOrdersIndexRoute
   '/(authenticated)/dashboard/admin/products/': typeof authenticatedDashboardAdminProductsIndexRoute
   '/(authenticated)/dashboard/admin/products/$productId/edit': typeof authenticatedDashboardAdminProductsProductIdEditRoute
@@ -236,8 +256,10 @@ export interface FileRouteTypes {
     | '/products'
     | '/dashboard/orders/$orderId'
     | '/dashboard/orders'
+    | '/dashboard/admin/customers/$customerId'
     | '/dashboard/admin/orders/$orderId'
     | '/dashboard/admin/products/create'
+    | '/dashboard/admin/customers'
     | '/dashboard/admin/orders'
     | '/dashboard/admin/products'
     | '/dashboard/admin/products/$productId/edit'
@@ -257,8 +279,10 @@ export interface FileRouteTypes {
     | '/products'
     | '/dashboard/orders/$orderId'
     | '/dashboard/orders'
+    | '/dashboard/admin/customers/$customerId'
     | '/dashboard/admin/orders/$orderId'
     | '/dashboard/admin/products/create'
+    | '/dashboard/admin/customers'
     | '/dashboard/admin/orders'
     | '/dashboard/admin/products'
     | '/dashboard/admin/products/$productId/edit'
@@ -281,8 +305,10 @@ export interface FileRouteTypes {
     | '/(shop)/products/'
     | '/(authenticated)/dashboard/orders/$orderId'
     | '/(authenticated)/dashboard/orders/'
+    | '/(authenticated)/dashboard/admin/customers/$customerId'
     | '/(authenticated)/dashboard/admin/orders/$orderId'
     | '/(authenticated)/dashboard/admin/products/create'
+    | '/(authenticated)/dashboard/admin/customers/'
     | '/(authenticated)/dashboard/admin/orders/'
     | '/(authenticated)/dashboard/admin/products/'
     | '/(authenticated)/dashboard/admin/products/$productId/edit'
@@ -432,6 +458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authenticatedDashboardAdminOrdersIndexRouteImport
       parentRoute: typeof authenticatedDashboardRouteRoute
     }
+    '/(authenticated)/dashboard/admin/customers/': {
+      id: '/(authenticated)/dashboard/admin/customers/'
+      path: '/admin/customers'
+      fullPath: '/dashboard/admin/customers'
+      preLoaderRoute: typeof authenticatedDashboardAdminCustomersIndexRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
+    }
     '/(authenticated)/dashboard/admin/products/create': {
       id: '/(authenticated)/dashboard/admin/products/create'
       path: '/admin/products/create'
@@ -444,6 +477,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/orders/$orderId'
       fullPath: '/dashboard/admin/orders/$orderId'
       preLoaderRoute: typeof authenticatedDashboardAdminOrdersOrderIdRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
+    }
+    '/(authenticated)/dashboard/admin/customers/$customerId': {
+      id: '/(authenticated)/dashboard/admin/customers/$customerId'
+      path: '/admin/customers/$customerId'
+      fullPath: '/dashboard/admin/customers/$customerId'
+      preLoaderRoute: typeof authenticatedDashboardAdminCustomersCustomerIdRouteImport
       parentRoute: typeof authenticatedDashboardRouteRoute
     }
     '/(authenticated)/dashboard/admin/products/$productId/edit': {
@@ -460,8 +500,10 @@ interface authenticatedDashboardRouteRouteChildren {
   authenticatedDashboardIndexRoute: typeof authenticatedDashboardIndexRoute
   authenticatedDashboardOrdersOrderIdRoute: typeof authenticatedDashboardOrdersOrderIdRoute
   authenticatedDashboardOrdersIndexRoute: typeof authenticatedDashboardOrdersIndexRoute
+  authenticatedDashboardAdminCustomersCustomerIdRoute: typeof authenticatedDashboardAdminCustomersCustomerIdRoute
   authenticatedDashboardAdminOrdersOrderIdRoute: typeof authenticatedDashboardAdminOrdersOrderIdRoute
   authenticatedDashboardAdminProductsCreateRoute: typeof authenticatedDashboardAdminProductsCreateRoute
+  authenticatedDashboardAdminCustomersIndexRoute: typeof authenticatedDashboardAdminCustomersIndexRoute
   authenticatedDashboardAdminOrdersIndexRoute: typeof authenticatedDashboardAdminOrdersIndexRoute
   authenticatedDashboardAdminProductsIndexRoute: typeof authenticatedDashboardAdminProductsIndexRoute
   authenticatedDashboardAdminProductsProductIdEditRoute: typeof authenticatedDashboardAdminProductsProductIdEditRoute
@@ -474,10 +516,14 @@ const authenticatedDashboardRouteRouteChildren: authenticatedDashboardRouteRoute
       authenticatedDashboardOrdersOrderIdRoute,
     authenticatedDashboardOrdersIndexRoute:
       authenticatedDashboardOrdersIndexRoute,
+    authenticatedDashboardAdminCustomersCustomerIdRoute:
+      authenticatedDashboardAdminCustomersCustomerIdRoute,
     authenticatedDashboardAdminOrdersOrderIdRoute:
       authenticatedDashboardAdminOrdersOrderIdRoute,
     authenticatedDashboardAdminProductsCreateRoute:
       authenticatedDashboardAdminProductsCreateRoute,
+    authenticatedDashboardAdminCustomersIndexRoute:
+      authenticatedDashboardAdminCustomersIndexRoute,
     authenticatedDashboardAdminOrdersIndexRoute:
       authenticatedDashboardAdminOrdersIndexRoute,
     authenticatedDashboardAdminProductsIndexRoute:
