@@ -144,7 +144,58 @@ packages/
 
 ---
 
-## 6. Roadmap
+## 6. Deployment Strategy
+
+### 6.1 Infrastructure
+
+**Hosting:** Hetzner Cloud  
+**Orchestration:** Dokploy (Docker-based PaaS)
+
+### 6.2 Architecture
+
+```text
+Hetzner VPS (CPX21 or better)
+├── Dokploy (management layer)
+├── PostgreSQL (container)
+├── Redis (container)
+├── Server (Hono API, port 3000)
+└── Web (React frontend, port 5173)
+```
+
+### 6.3 Deployment Requirements
+
+| Component | Requirement |
+| --------- | ----------- |
+| VPS Specs | 3 vCPU, 4GB RAM (Hetzner CPX21 ~€8/mo) |
+| Disk Space | 40GB SSD |
+| Domains | Custom domain with SSL (Dokploy handles Let's Encrypt) |
+| Backups | Automated daily PostgreSQL dumps |
+
+### 6.4 Deployment Process
+
+1. **Provision Hetzner VPS** — Create Ubuntu 22.04 server
+2. **Install Dokploy** — One-command installation via script
+3. **Configure Project** — Add Git repository to Dokploy
+4. **Environment Variables** — Set via Dokploy UI (encrypted storage)
+5. **Database Setup** — Dokploy provisions PostgreSQL + Redis containers
+6. **Deploy** — Git push triggers automatic build and deployment
+7. **SSL & Domains** — Dokploy auto-provisions Let's Encrypt certificates
+
+### 6.5 Monitoring & Maintenance
+
+| Feature | Implementation |
+| ------- | -------------- |
+| Health Checks | Dokploy monitors container health |
+| Logs | Centralized via Dokploy dashboard |
+| Backups | Automated PostgreSQL backups to Hetzner volumes |
+| Updates | Zero-downtime rolling deployments |
+| Rollbacks | One-click rollback to previous version |
+
+> **Implementation guide** → See `docs/deployment-guide.md` (to be created)
+
+---
+
+## 7. Roadmap
 
 ### Phase 1: MVP ✅
 
