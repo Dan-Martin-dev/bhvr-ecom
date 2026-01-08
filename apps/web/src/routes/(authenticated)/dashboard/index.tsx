@@ -84,9 +84,9 @@ function DashboardPage() {
             <p className="text-sm text-muted-foreground mb-4">
               View sales reports and insights
             </p>
-            <Button className="w-full" variant="secondary" disabled>
-              Coming Soon
-            </Button>
+            <Link to="/dashboard/admin/stats">
+              <Button className="w-full">View Analytics</Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

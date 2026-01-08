@@ -91,8 +91,8 @@ bhvr-ecom is an open-source e-commerce boilerplate for developers seeking comple
 | ------- | -------- | ------ |
 | Order Management | P0 | ✅ |
 | Product Management | P0 | ✅ |
-| Customer Management | P1 | ⏳ |
-| Dashboard Stats | P1 | ⏳ |
+| Customer Management | P1 | ✅ |
+| Dashboard Stats | P1 | ✅ |
 
 ---
 

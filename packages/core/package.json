@@ -18,6 +18,10 @@
       "types": "./src/customers/index.ts",
       "default": "./src/customers/index.ts"
     },
+    "./analytics": {
+      "types": "./src/analytics/dashboard.ts",
+      "default": "./src/analytics/dashboard.ts"
+    },
     "./cart": {
       "types": "./src/cart/index.ts",
       "default": "./src/cart/index.ts"

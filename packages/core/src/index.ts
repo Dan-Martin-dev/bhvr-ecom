@@ -11,6 +11,9 @@ export * from "./variants";
 // Customer use cases
 export * from "./customers";
 
+// Analytics use cases
+export * from "./analytics/dashboard";
+
 // Cart use cases
 export * from "./cart";
 
