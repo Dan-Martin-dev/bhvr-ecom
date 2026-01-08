@@ -129,12 +129,20 @@ packages/
 48. **Named exports for use cases** — `export async function getProducts()`, not default export
 49. **Type imports use `type` keyword** — `import type { User }` to avoid bundling issues
 
+### Type Organization
+
+50. **Domain types live in packages** — `Product`, `Order`, `Cart` types in `@bhvr-ecom/validations` (inferred from Zod) or `@bhvr-ecom/core/types`
+51. **Infer types from Zod schemas** — `export type Product = z.infer<typeof productSchema>`, never duplicate
+52. **No duplicate interfaces** — If a type exists in packages, import it; don't redefine locally
+53. **Component-only props stay local** — `interface ButtonProps` can live in button file, but domain types cannot
+54. **API response types derived from RPC** — Use `Awaited<ReturnType<typeof api.endpoint.$get>>` for response types when possible
+
 ### Error Handling
 
-50. **Global error handler in server** — HTTPException and ZodError already handled in `index.ts`
-51. **Toast for user-facing errors** — Use `toast.error()` from sonner in mutations
-52. **Log errors server-side** — `console.error` with stack trace for debugging
-53. **Never expose internal errors to client** — Return generic "Internal error" for unexpected failures
+55. **Global error handler in server** — HTTPException and ZodError already handled in `index.ts`
+56. **Toast for user-facing errors** — Use `toast.error()` from sonner in mutations
+57. **Log errors server-side** — `console.error` with stack trace for debugging
+58. **Never expose internal errors to client** — Return generic "Internal error" for unexpected failures
 
 ## Commands
 

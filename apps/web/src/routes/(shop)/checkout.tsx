@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { checkoutApi, cartApi, type Address } from "@/lib/api";
+import { checkoutApi, cartApi, type Address, type Cart } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -21,23 +21,6 @@ import { ShoppingCart, MapPin, Truck, CreditCard, Loader2 } from "lucide-react";
 export const Route = createFileRoute("/(shop)/checkout")({
   component: CheckoutPage,
 });
-
-interface Cart {
-  id: string;
-  items: Array<{
-    id: string;
-    productId: string;
-    quantity: number;
-    priceAtAdd: number;
-    product: {
-      name: string;
-      price: number;
-      weight?: number;
-    };
-  }>;
-  subtotal: number;
-  total: number;
-}
 
 type CheckoutStep = "shipping" | "payment" | "review";
 

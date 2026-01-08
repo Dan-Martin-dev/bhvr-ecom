@@ -2,28 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getGuestSessionId, hasGuestCartItems, clearGuestCartData } from "./guest-cart";
 import { cartApi } from "./api";
-
-interface CartItem {
-  id: string;
-  productId: string;
-  quantity: number;
-  priceAtAdd: number;
-  product: {
-    id: string;
-    name: string;
-    slug: string;
-    price: number;
-    stock: number;
-    images?: Array<{ url: string; alt?: string }>;
-  };
-}
-
-interface Cart {
-  id: string;
-  items: CartItem[];
-  subtotal: number;
-  total: number;
-}
+import type { Cart, CartItem } from "./api";
 
 /**
  * Custom hook for cart operations (supports both guest and authenticated users)

@@ -10,21 +10,6 @@ export const Route = createFileRoute("/(shop)/cart")({
   component: CartPage,
 });
 
-interface CartItem {
-  id: string;
-  productId: string;
-  quantity: number;
-  priceAtAdd: number;
-  product: {
-    id: string;
-    name: string;
-    slug: string;
-    price: number;
-    stock: number;
-    images?: Array<{ url: string; alt?: string }>;
-  };
-}
-
 function CartPage() {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();

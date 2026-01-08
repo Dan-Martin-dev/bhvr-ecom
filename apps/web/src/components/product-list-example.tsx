@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, type Product } from "@/lib/api";
 import { useState, useEffect } from "react";
 
 /**
@@ -9,15 +9,6 @@ import { useState, useEffect } from "react";
  * - Add items to cart
  * - Handle errors
  */
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string | null;
-  slug: string;
-  isActive: boolean;
-}
 
 export function ProductListExample() {
   const [products, setProducts] = useState<Product[]>([]);

@@ -1,54 +1,39 @@
 import { hc } from "hono/client";
 import type { AppType } from "../../../server/src/index";
 import { env } from "@bhvr-ecom/env/web";
+import type {
+  Product,
+  ProductImage,
+  Cart,
+  CartItem,
+  Address,
+  Order,
+  OrdersResponse,
+} from "@bhvr-ecom/validations";
 
 // Create type-safe RPC client
 export const api = hc<AppType>(env.VITE_SERVER_URL);
 
 // ============================================================================
-// TYPE DEFINITIONS
+// TYPE RE-EXPORTS FROM VALIDATIONS
 // ============================================================================
+// Domain types are defined in @bhvr-ecom/validations via Zod schemas.
+// Re-export them here for convenience in the web app.
 
-export interface Address {
-  firstName: string;
-  lastName: string;
-  company?: string;
-  address1: string;
-  address2?: string;
-  city: string;
-  province: string;
-  postalCode: string;
-  country?: string;
-  phone: string;
-}
+export type {
+  Product,
+  ProductImage,
+  Cart,
+  CartItem,
+  Address,
+  Order,
+  OrdersResponse,
+};
 
-export interface ProductImage {
-  id: string;
-  url: string;
-  alt?: string | null;
-  sortOrder: number;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  price: number;
-  compareAtPrice?: number | null;
-  sku?: string | null;
-  barcode?: string | null;
-  weight?: number | null;
-  stock: number;
-  lowStockThreshold: number;
-  trackInventory: boolean;
-  allowBackorder: boolean;
-  isFeatured: boolean;
-  isActive: boolean;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
-  images?: ProductImage[];
-}
+// ============================================================================
+// API-SPECIFIC FILTER TYPES
+// ============================================================================
+// These are specific to how we call the API and don't need Zod validation.
 
 export interface ProductFilters {
   page?: number;

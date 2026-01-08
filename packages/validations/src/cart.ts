@@ -48,23 +48,25 @@ export const cartItemResponseSchema = z.object({
   id: z.string().uuid(),
   productId: z.string().uuid(),
   quantity: z.number().int(),
-  priceSnapshot: z.number().int(),
+  priceAtAdd: z.number().int(),
   product: z.object({
+    id: z.string().uuid(),
     name: z.string(),
     slug: z.string(),
     price: z.number().int(),
     stock: z.number().int(),
-    imageUrl: z.string().url().optional(),
+    images: z.array(z.object({
+      url: z.string(),
+      alt: z.string().nullable().optional(),
+    })).optional(),
   }),
 });
 
 export const cartResponseSchema = z.object({
   id: z.string().uuid(),
-  userId: z.string().uuid().nullable(),
-  sessionId: z.string().nullable(),
   items: z.array(cartItemResponseSchema),
   subtotal: z.number().int(),
-  itemCount: z.number().int(),
+  total: z.number().int(),
 });
 
 // ============================================================================
@@ -76,5 +78,5 @@ export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>;
 export type RemoveFromCartInput = z.infer<typeof removeFromCartSchema>;
 export type GuestCartItem = z.infer<typeof guestCartItemSchema>;
 export type SyncGuestCartInput = z.infer<typeof syncGuestCartSchema>;
-export type CartItemResponse = z.infer<typeof cartItemResponseSchema>;
-export type CartResponse = z.infer<typeof cartResponseSchema>;
+export type CartItem = z.infer<typeof cartItemResponseSchema>;
+export type Cart = z.infer<typeof cartResponseSchema>;

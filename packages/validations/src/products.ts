@@ -89,6 +89,38 @@ export const productImageSchema = z.object({
 });
 
 // ============================================================================
+// RESPONSE SCHEMAS (for frontend consumption)
+// ============================================================================
+
+export const productImageResponseSchema = z.object({
+  id: z.string().uuid(),
+  url: z.string().url(),
+  alt: z.string().nullable().optional(),
+  sortOrder: z.number().int(),
+});
+
+export const productResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  description: z.string().nullable().optional(),
+  price: z.number().int(),
+  compareAtPrice: z.number().int().nullable().optional(),
+  sku: z.string().nullable().optional(),
+  barcode: z.string().nullable().optional(),
+  weight: z.number().int().nullable().optional(),
+  stock: z.number().int(),
+  lowStockThreshold: z.number().int(),
+  trackInventory: z.boolean(),
+  allowBackorder: z.boolean(),
+  isFeatured: z.boolean(),
+  isActive: z.boolean(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  images: z.array(productImageResponseSchema).optional(),
+});
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -98,3 +130,5 @@ export type ProductQueryInput = z.input<typeof productQuerySchema>;
 export type CreateCategoryInput = z.input<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.input<typeof updateCategorySchema>;
 export type ProductImageInput = z.input<typeof productImageSchema>;
+export type ProductImage = z.infer<typeof productImageResponseSchema>;
+export type Product = z.infer<typeof productResponseSchema>;

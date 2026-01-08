@@ -126,6 +126,33 @@ export const applyCouponSchema = z.object({
 });
 
 // ============================================================================
+// RESPONSE SCHEMAS (for frontend consumption)
+// ============================================================================
+
+export const orderResponseSchema = z.object({
+  id: z.string().uuid(),
+  orderNumber: z.string(),
+  status: orderStatusEnum,
+  total: z.number().int(),
+  createdAt: z.string(),
+  items: z.array(z.object({
+    id: z.string().uuid(),
+    productName: z.string(),
+    quantity: z.number().int(),
+  })),
+});
+
+export const ordersResponseSchema = z.object({
+  orders: z.array(orderResponseSchema),
+  pagination: z.object({
+    page: z.number().int(),
+    limit: z.number().int(),
+    total: z.number().int(),
+    totalPages: z.number().int(),
+  }),
+});
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -141,3 +168,5 @@ export type OrderItem = z.infer<typeof orderItemSchema>;
 export type DiscountType = z.infer<typeof discountTypeEnum>;
 export type CreateCouponInput = z.infer<typeof createCouponSchema>;
 export type ApplyCouponInput = z.infer<typeof applyCouponSchema>;
+export type Order = z.infer<typeof orderResponseSchema>;
+export type OrdersResponse = z.infer<typeof ordersResponseSchema>;
