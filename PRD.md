@@ -47,7 +47,6 @@ bhvr-ecom is an open-source e-commerce boilerplate for developers seeking comple
 | Feature | Priority | Status |
 | ------- | -------- | ------ |
 | Email/Password Auth | P0 | ✅ |
-| OAuth (Google, GitHub) | P1 | ⏳ |
 | Session Management | P0 | ✅ |
 | Password Reset | P0 | ✅ |
 | Role-Based Access (Admin, Customer, Guest) | P0 | ✅ |
