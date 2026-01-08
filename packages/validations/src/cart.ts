@@ -14,6 +14,11 @@ export const updateCartItemSchema = z.object({
   quantity: z.number().int().min(0, "Quantity cannot be negative"),
 });
 
+// Schema for update route body without cartItemId (used in route params)
+export const updateCartItemBodySchema = z.object({
+  quantity: z.number().int().min(0, "Quantity cannot be negative"),
+});
+
 export const removeFromCartSchema = z.object({
   cartItemId: z.string().uuid("Invalid cart item ID"),
 });

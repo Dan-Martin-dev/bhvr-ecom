@@ -30,9 +30,50 @@ export const createShippingMethodSchema = z.object({
   }
 );
 
-export const updateShippingMethodSchema = createShippingMethodSchema.partial().extend({
-  id: z.string().uuid("Invalid shipping method ID"),
+// Base schema without refinements for partial updates
+const baseShippingMethodSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().max(500).optional(),
+  baseCost: z.number().int().min(0, "Base cost must be non-negative"),
+  costPerKg: z.number().int().min(0).default(0),
+  zones: z.array(shippingZoneEnum).min(1, "At least one zone is required"),
+  minDeliveryDays: z.number().int().min(0, "Min delivery days must be non-negative"),
+  maxDeliveryDays: z.number().int().min(0, "Max delivery days must be non-negative"),
+  freeShippingThreshold: z.number().int().min(0).optional(),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
 });
+
+export const updateShippingMethodSchema = baseShippingMethodSchema.partial().extend({
+  id: z.string().uuid("Invalid shipping method ID"),
+}).refine(
+  (data) => {
+    // Only validate if both fields are provided
+    if (data.maxDeliveryDays !== undefined && data.minDeliveryDays !== undefined) {
+      return data.maxDeliveryDays >= data.minDeliveryDays;
+    }
+    return true;
+  },
+  {
+    message: "Max delivery days must be greater than or equal to min delivery days",
+    path: ["maxDeliveryDays"],
+  }
+);
+
+// Schema for update route without id field (used in route params)
+export const updateShippingMethodBodySchema = baseShippingMethodSchema.partial().refine(
+  (data) => {
+    // Only validate if both fields are provided
+    if (data.maxDeliveryDays !== undefined && data.minDeliveryDays !== undefined) {
+      return data.maxDeliveryDays >= data.minDeliveryDays;
+    }
+    return true;
+  },
+  {
+    message: "Max delivery days must be greater than or equal to min delivery days",
+    path: ["maxDeliveryDays"],
+  }
+);
 
 export const shippingMethodIdSchema = z.object({
   id: z.string().uuid("Invalid shipping method ID"),

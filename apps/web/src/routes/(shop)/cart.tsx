@@ -109,7 +109,7 @@ function CartPage() {
                     <Link
                       to="/products/$slug"
                       params={{ slug: item.product.slug }}
-                      className="flex-shrink-0"
+                      className="shrink-0"
                     >
                       <div className="h-24 w-24 overflow-hidden rounded-md border bg-muted">
                         {item.product.images?.[0] ? (

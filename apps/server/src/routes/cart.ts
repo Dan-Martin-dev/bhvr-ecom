@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { addToCartSchema, updateCartItemSchema } from "@bhvr-ecom/validations";
+import { addToCartSchema, updateCartItemSchema, updateCartItemBodySchema } from "@bhvr-ecom/validations";
 import * as cartUseCases from "@bhvr-ecom/core/cart";
 import { optionalAuth } from "../middleware/auth";
 import type { AppEnv } from "../types";
@@ -38,7 +38,7 @@ const cart = new Hono<AppEnv>()
     );
     return c.json(result, 201);
   })
-  .put("/items/:cartItemId", zValidator("json", updateCartItemSchema.omit({ cartItemId: true })), async (c) => {
+  .put("/items/:cartItemId", zValidator("json", updateCartItemBodySchema), async (c) => {
     const cartItemId = c.req.param("cartItemId");
     const { quantity } = c.req.valid("json");
     

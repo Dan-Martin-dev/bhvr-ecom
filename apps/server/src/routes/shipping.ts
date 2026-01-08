@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
   createShippingMethodSchema,
-  updateShippingMethodSchema,
+  updateShippingMethodBodySchema,
   getShippingMethodsSchema,
   calculateShippingSchema,
 } from "@bhvr-ecom/validations";
@@ -37,7 +37,7 @@ const shipping = new Hono<AppEnv>()
     const method = await shippingUseCases.createShippingMethod(data);
     return c.json(method, 201);
   })
-  .put("/methods/:id", zValidator("json", updateShippingMethodSchema.omit({ id: true })), async (c) => {
+  .put("/methods/:id", zValidator("json", updateShippingMethodBodySchema), async (c) => {
     const id = c.req.param("id");
     const data = c.req.valid("json");
     
