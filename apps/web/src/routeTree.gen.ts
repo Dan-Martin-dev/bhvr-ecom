@@ -15,6 +15,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as shopRouteRouteImport } from './routes/(shop)/route'
 import { Route as authenticatedRouteRouteImport } from './routes/(authenticated)/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShopCheckoutRouteImport } from './routes/shop.checkout'
 import { Route as shopCheckoutRouteImport } from './routes/(shop)/checkout'
 import { Route as shopCartRouteImport } from './routes/(shop)/cart'
 import { Route as authenticatedDashboardRouteRouteImport } from './routes/(authenticated)/dashboard/route'
@@ -61,6 +62,11 @@ const authenticatedRouteRoute = authenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopCheckoutRoute = ShopCheckoutRouteImport.update({
+  id: '/shop/checkout',
+  path: '/shop/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const shopCheckoutRoute = shopCheckoutRouteImport.update({
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof authenticatedDashboardRouteRouteWithChildren
   '/cart': typeof shopCartRoute
   '/checkout': typeof shopCheckoutRoute
+  '/shop/checkout': typeof ShopCheckoutRoute
   '/order/failure': typeof shopOrderFailureRoute
   '/order/pending': typeof shopOrderPendingRoute
   '/order/success': typeof shopOrderSuccessRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/cart': typeof shopCartRoute
   '/checkout': typeof shopCheckoutRoute
+  '/shop/checkout': typeof ShopCheckoutRoute
   '/order/failure': typeof shopOrderFailureRoute
   '/order/pending': typeof shopOrderPendingRoute
   '/order/success': typeof shopOrderSuccessRoute
@@ -231,6 +239,7 @@ export interface FileRoutesById {
   '/(authenticated)/dashboard': typeof authenticatedDashboardRouteRouteWithChildren
   '/(shop)/cart': typeof shopCartRoute
   '/(shop)/checkout': typeof shopCheckoutRoute
+  '/shop/checkout': typeof ShopCheckoutRoute
   '/(shop)/order/failure': typeof shopOrderFailureRoute
   '/(shop)/order/pending': typeof shopOrderPendingRoute
   '/(shop)/order/success': typeof shopOrderSuccessRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/cart'
     | '/checkout'
+    | '/shop/checkout'
     | '/order/failure'
     | '/order/pending'
     | '/order/success'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/cart'
     | '/checkout'
+    | '/shop/checkout'
     | '/order/failure'
     | '/order/pending'
     | '/order/success'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/(authenticated)/dashboard'
     | '/(shop)/cart'
     | '/(shop)/checkout'
+    | '/shop/checkout'
     | '/(shop)/order/failure'
     | '/(shop)/order/pending'
     | '/(shop)/order/success'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ShopCheckoutRoute: typeof ShopCheckoutRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -378,6 +391,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop/checkout': {
+      id: '/shop/checkout'
+      path: '/shop/checkout'
+      fullPath: '/shop/checkout'
+      preLoaderRoute: typeof ShopCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(shop)/checkout': {
@@ -603,6 +623,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ShopCheckoutRoute: ShopCheckoutRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

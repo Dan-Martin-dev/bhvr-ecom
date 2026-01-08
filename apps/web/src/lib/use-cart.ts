@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getGuestSessionId, hasGuestCartItems, clearGuestCartData } from "./guest-cart";
+import { cartApi } from "./api";
 
 interface CartItem {
   id: string;
@@ -35,21 +36,7 @@ export function useCart(isAuthenticated: boolean) {
   const { data: cart, isLoading, error } = useQuery<Cart>({
     queryKey: ["cart", isAuthenticated ? "auth" : sessionId],
     queryFn: async () => {
-      const headers: HeadersInit = {
-        credentials: "include",
-      };
-
-      if (!isAuthenticated && sessionId) {
-        headers["x-session-id"] = sessionId;
-      }
-
-      const response = await fetch("/api/cart", {
-        credentials: "include",
-        headers,
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch cart");
-      return response.json();
+      return await cartApi.get(isAuthenticated ? undefined : sessionId);
     },
   });
 
@@ -62,27 +49,7 @@ export function useCart(isAuthenticated: boolean) {
       productId: string;
       quantity: number;
     }) => {
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-
-      if (!isAuthenticated && sessionId) {
-        headers["x-session-id"] = sessionId;
-      }
-
-      const response = await fetch("/api/cart/items", {
-        method: "POST",
-        credentials: "include",
-        headers,
-        body: JSON.stringify({ productId, quantity }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to add to cart");
-      }
-
-      return response.json();
+      return await cartApi.addItem(productId, quantity, isAuthenticated ? undefined : sessionId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -102,19 +69,7 @@ export function useCart(isAuthenticated: boolean) {
       cartItemId: string;
       quantity: number;
     }) => {
-      const response = await fetch(`/api/cart/items/${cartItemId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ quantity }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update quantity");
-      }
-
-      return response.json();
+      return await cartApi.updateItem(cartItemId, quantity);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -127,17 +82,7 @@ export function useCart(isAuthenticated: boolean) {
   // Remove item mutation
   const removeItemMutation = useMutation({
     mutationFn: async (cartItemId: string) => {
-      const response = await fetch(`/api/cart/items/${cartItemId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to remove item");
-      }
-
-      return response.json();
+      return await cartApi.removeItem(cartItemId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -151,24 +96,7 @@ export function useCart(isAuthenticated: boolean) {
   // Clear cart mutation
   const clearCartMutation = useMutation({
     mutationFn: async () => {
-      const headers: HeadersInit = {};
-
-      if (!isAuthenticated && sessionId) {
-        headers["x-session-id"] = sessionId;
-      }
-
-      const response = await fetch("/api/cart", {
-        method: "DELETE",
-        credentials: "include",
-        headers,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to clear cart");
-      }
-
-      return response.json();
+      return await cartApi.clear(isAuthenticated ? undefined : sessionId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -183,21 +111,7 @@ export function useCart(isAuthenticated: boolean) {
   const mergeGuestCartMutation = useMutation({
     mutationFn: async () => {
       const guestSessionId = getGuestSessionId();
-
-      const response = await fetch("/api/cart/merge", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "x-session-id": guestSessionId,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to merge cart");
-      }
-
-      return response.json();
+      return await cartApi.merge(guestSessionId);
     },
     onSuccess: () => {
       // Clear guest cart data after successful merge

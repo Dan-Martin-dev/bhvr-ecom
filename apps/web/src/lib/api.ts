@@ -6,6 +6,77 @@ import { env } from "@bhvr-ecom/env/web";
 export const api = hc<AppType>(env.VITE_SERVER_URL);
 
 // ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+export interface Address {
+  firstName: string;
+  lastName: string;
+  company?: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country?: string;
+  phone: string;
+}
+
+export interface ProductImage {
+  id: string;
+  url: string;
+  alt?: string | null;
+  sortOrder: number;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  price: number;
+  compareAtPrice?: number | null;
+  sku?: string | null;
+  barcode?: string | null;
+  weight?: number | null;
+  stock: number;
+  lowStockThreshold: number;
+  trackInventory: boolean;
+  allowBackorder: boolean;
+  isFeatured: boolean;
+  isActive: boolean;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  images?: ProductImage[];
+}
+
+export interface ProductFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  categoryId?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: "name" | "price" | "createdAt";
+  sortOrder?: "asc" | "desc";
+}
+
+export interface OrderFilters {
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+export interface AdminOrderFilters {
+  page?: number;
+  limit?: number;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+// ============================================================================
 // HELPER METHODS FOR COMMON API OPERATIONS
 // ============================================================================
 // These wrappers provide better ergonomics and type safety for common operations
@@ -17,20 +88,9 @@ export const productApi = {
   /**
    * Get all products with optional filters
    */
-  list: async (params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    categoryId?: string;
-    isActive?: boolean;
-    isFeatured?: boolean;
-    minPrice?: number;
-    maxPrice?: number;
-    sortBy?: "name" | "price" | "createdAt";
-    sortOrder?: "asc" | "desc";
-  }) => {
+  list: async (params?: ProductFilters) => {
     const response = await api.api.products.$get({
-      query: params as any,
+      query: params as Record<string, string>,
     });
     if (!response.ok) throw new Error("Failed to fetch products");
     return response.json();
@@ -50,13 +110,21 @@ export const productApi = {
 
 /**
  * Cart API helpers
+ * Note: For guest users, session ID must be passed via x-session-id header.
+ * The RPC client doesn't easily support custom headers, so we use fetch for cart operations.
  */
 export const cartApi = {
   /**
-   * Get current user's cart
+   * Get current user's cart (supports guest via session header)
    */
-  get: async () => {
-    const response = await api.api.cart.$get();
+  get: async (sessionId?: string) => {
+    const headers: HeadersInit = { credentials: "include" };
+    if (sessionId) headers["x-session-id"] = sessionId;
+
+    const response = await fetch("/api/cart", {
+      credentials: "include",
+      headers,
+    });
     if (!response.ok) throw new Error("Failed to fetch cart");
     return response.json();
   },
@@ -64,11 +132,22 @@ export const cartApi = {
   /**
    * Add item to cart
    */
-  addItem: async (productId: string, quantity: number) => {
-    const response = await api.api.cart.items.$post({
-      json: { productId, quantity },
+  addItem: async (productId: string, quantity: number, sessionId?: string) => {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+    if (sessionId) headers["x-session-id"] = sessionId;
+
+    const response = await fetch("/api/cart/items", {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: JSON.stringify({ productId, quantity }),
     });
-    if (!response.ok) throw new Error("Failed to add item to cart");
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to add item to cart");
+    }
     return response.json();
   },
 
@@ -76,11 +155,16 @@ export const cartApi = {
    * Update cart item quantity
    */
   updateItem: async (cartItemId: string, quantity: number) => {
-    const response = await api.api.cart.items[":cartItemId"].$put({
-      param: { cartItemId },
-      json: { quantity },
+    const response = await fetch(`/api/cart/items/${cartItemId}`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity }),
     });
-    if (!response.ok) throw new Error("Failed to update cart item");
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to update cart item");
+    }
     return response.json();
   },
 
@@ -88,19 +172,51 @@ export const cartApi = {
    * Remove item from cart
    */
   removeItem: async (cartItemId: string) => {
-    const response = await api.api.cart.items[":cartItemId"].$delete({
-      param: { cartItemId },
+    const response = await fetch(`/api/cart/items/${cartItemId}`, {
+      method: "DELETE",
+      credentials: "include",
     });
-    if (!response.ok) throw new Error("Failed to remove item from cart");
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to remove item from cart");
+    }
     return response.json();
   },
 
   /**
    * Clear entire cart
    */
-  clear: async () => {
-    const response = await api.api.cart.$delete();
-    if (!response.ok) throw new Error("Failed to clear cart");
+  clear: async (sessionId?: string) => {
+    const headers: HeadersInit = {};
+    if (sessionId) headers["x-session-id"] = sessionId;
+
+    const response = await fetch("/api/cart", {
+      method: "DELETE",
+      credentials: "include",
+      headers,
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to clear cart");
+    }
+    return response.json();
+  },
+
+  /**
+   * Merge guest cart with authenticated user cart on login
+   */
+  merge: async (guestSessionId: string) => {
+    const response = await fetch("/api/cart/merge", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "x-session-id": guestSessionId,
+      },
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to merge cart");
+    }
     return response.json();
   },
 };
@@ -114,8 +230,8 @@ export const checkoutApi = {
    */
   createPayment: async (data: {
     cartId: string;
-    shippingAddress: any;
-    billingAddress: any;
+    shippingAddress: Address;
+    billingAddress: Address;
     shippingZone: "amba" | "interior" | "pickup";
     notes?: string;
     couponCode?: string;
@@ -135,9 +251,9 @@ export const ordersApi = {
   /**
    * Get user's order history
    */
-  list: async (params?: { sortBy?: string; sortOrder?: string }) => {
+  list: async (params?: OrderFilters) => {
     const response = await api.api.orders.$get({
-      query: params as any,
+      query: params as Record<string, string>,
     });
     if (!response.ok) throw new Error("Failed to fetch orders");
     return response.json();
@@ -163,15 +279,9 @@ export const adminApi = {
     /**
      * Get all orders (admin)
      */
-    list: async (params?: {
-      page?: number;
-      limit?: number;
-      status?: string;
-      sortBy?: string;
-      sortOrder?: string;
-    }) => {
+    list: async (params?: AdminOrderFilters) => {
       const response = await api.api.admin.orders.$get({
-        query: params as any,
+        query: params as Record<string, string>,
       });
       if (!response.ok) throw new Error("Failed to fetch orders");
       return response.json();

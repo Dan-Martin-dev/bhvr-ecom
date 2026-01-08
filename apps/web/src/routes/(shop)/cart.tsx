@@ -132,6 +132,9 @@ function CartPage() {
                             src={item.product.images[0].url}
                             alt={item.product.images[0].alt || item.product.name}
                             className="h-full w-full object-cover"
+                            loading="lazy"
+                            width={96}
+                            height={96}
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">

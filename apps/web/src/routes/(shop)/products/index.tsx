@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { productApi, type Product } from "@/lib/api";
+import { useDebounce } from "@/lib/use-debounce";
 import {
   Select,
   SelectContent,
@@ -39,28 +41,35 @@ function ProductsPage() {
   const navigate = useNavigate({ from: Route.fullPath });
   const searchParams = Route.useSearch();
   const [searchInput, setSearchInput] = useState(searchParams.search || "");
+  
+  // Debounce search input to avoid excessive API calls
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  // Auto-search when debounced value changes
+  useEffect(() => {
+    if (debouncedSearch !== searchParams.search) {
+      navigate({
+        search: { ...searchParams, search: debouncedSearch || undefined, page: 1 },
+      });
+    }
+  }, [debouncedSearch]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["products", searchParams],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (searchParams.page) params.append("page", searchParams.page.toString());
-      if (searchParams.search) params.append("search", searchParams.search);
-      if (searchParams.categoryId) params.append("categoryId", searchParams.categoryId);
-      if (searchParams.sortBy) params.append("sortBy", searchParams.sortBy);
-      if (searchParams.sortOrder) params.append("sortOrder", searchParams.sortOrder);
-
-      const response = await fetch(`/api/products?${params.toString()}`);
-      if (!response.ok) throw new Error("Failed to fetch products");
-      return response.json();
+      return await productApi.list({
+        page: searchParams.page,
+        search: searchParams.search,
+        categoryId: searchParams.categoryId,
+        sortBy: searchParams.sortBy as "name" | "price" | "createdAt",
+        sortOrder: searchParams.sortOrder,
+      });
     },
   });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate({
-      search: { ...searchParams, search: searchInput || undefined, page: 1 },
-    });
+    // Form submit is now handled by debounced auto-search
   };
 
   const handleSortChange = (value: string) => {
@@ -122,7 +131,7 @@ function ProductsPage() {
             value={`${searchParams.sortBy}-${searchParams.sortOrder}`}
             onValueChange={handleSortChange}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-50">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -178,7 +187,7 @@ function ProductsPage() {
       {!isLoading && data?.products && (
         <>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data.products.map((product: any) => (
+            {data.products.map((product: Product) => (
               <Card key={product.id} className="flex flex-col">
                 <CardHeader className="p-0">
                   <Link
@@ -191,6 +200,9 @@ function ProductsPage() {
                         src={product.images[0].url}
                         alt={product.images[0].alt || product.name}
                         className="h-full w-full object-cover transition-transform hover:scale-105"
+                        loading="lazy"
+                        width={400}
+                        height={400}
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -269,30 +281,30 @@ function ProductsPage() {
           )}
 
           {/* Pagination */}
-          {data.totalPages > 1 && (
+          {data.pagination.totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => handlePageChange(data.currentPage - 1)}
-                disabled={data.currentPage === 1}
+                onClick={() => handlePageChange(data.pagination.page - 1)}
+                disabled={data.pagination.page === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
               <div className="flex items-center gap-2">
-                {[...Array(data.totalPages)].map((_, i) => {
+                {[...Array(data.pagination.totalPages)].map((_, i) => {
                   const page = i + 1;
                   // Show first, last, current, and adjacent pages
                   if (
                     page === 1 ||
-                    page === data.totalPages ||
-                    Math.abs(page - data.currentPage) <= 1
+                    page === data.pagination.totalPages ||
+                    Math.abs(page - data.pagination.page) <= 1
                   ) {
                     return (
                       <Button
                         key={page}
-                        variant={page === data.currentPage ? "default" : "outline"}
+                        variant={page === data.pagination.page ? "default" : "outline"}
                         size="icon"
                         onClick={() => handlePageChange(page)}
                       >
@@ -301,7 +313,7 @@ function ProductsPage() {
                     );
                   } else if (
                     page === 2 ||
-                    page === data.totalPages - 1
+                    page === data.pagination.totalPages - 1
                   ) {
                     return <span key={page}>...</span>;
                   }
@@ -312,8 +324,8 @@ function ProductsPage() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => handlePageChange(data.currentPage + 1)}
-                disabled={data.currentPage === data.totalPages}
+                onClick={() => handlePageChange(data.pagination.page + 1)}
+                disabled={data.pagination.page === data.pagination.totalPages}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -322,7 +334,7 @@ function ProductsPage() {
 
           {/* Results Summary */}
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            Showing {data.products.length} of {data.total} products
+            Showing {data.products.length} of {data.pagination.total} products
           </div>
         </>
       )}

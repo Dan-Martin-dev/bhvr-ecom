@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-
+import { toast } from "sonner";import { productApi, cartApi, type Product, type ProductImage } from "@/lib/api";
 export const Route = createFileRoute("/(shop)/products/$slug")({
   component: ProductDetailPage,
 });
@@ -23,31 +22,16 @@ function ProductDetailPage() {
   const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", slug],
     queryFn: async () => {
-      const response = await fetch(`/api/products/${slug}`);
-      if (!response.ok) {
-        if (response.status === 404) throw new Error("Product not found");
-        throw new Error("Failed to fetch product");
-      }
-      return response.json();
+      const result = await productApi.get(slug);
+      if (!result) throw new Error("Product not found");
+      return result as Product;
     },
   });
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: async (data: { productId: string; quantity: number }) => {
-      const response = await fetch("/api/cart/items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to add to cart");
-      }
-
-      return response.json();
+      return await cartApi.addItem(data.productId, data.quantity);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -161,6 +145,9 @@ function ProductDetailPage() {
                 src={product.images[selectedImageIndex].url}
                 alt={product.images[selectedImageIndex].alt || product.name}
                 className="h-full w-full object-cover"
+                loading="lazy"
+                width={800}
+                height={800}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -180,7 +167,7 @@ function ProductDetailPage() {
           {/* Thumbnail Images */}
           {product.images && product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image: any, index: number) => (
+              {product.images.map((image: ProductImage, index: number) => (
                 <button
                   key={image.id}
                   onClick={() => setSelectedImageIndex(index)}
@@ -194,6 +181,9 @@ function ProductDetailPage() {
                     src={image.url}
                     alt={image.alt || `${product.name} ${index + 1}`}
                     className="h-full w-full object-cover"
+                    loading="lazy"
+                    width={200}
+                    height={200}
                   />
                 </button>
               ))}
