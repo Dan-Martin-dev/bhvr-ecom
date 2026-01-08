@@ -8,16 +8,23 @@
  * - Sneaker variants (sizes: 39, 40, 41, 42, 43)
  */
 
-import dotenv from "dotenv";
-import { resolve } from "node:path";
-import postgres from "postgres";
+// This script must be run from the repo root. It follows the same env loading
+// pattern as other seed scripts in the repo.
+import { config } from "dotenv";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+// Load environment variables from apps/server/.env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+config({ path: join(__dirname, "../../../apps/server/.env") });
+
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { product, productVariant } from "../src/schema/ecommerce";
-import { eq } from "drizzle-orm";
+import * as schema from "../src/schema/ecommerce";
+import { eq, ilike, or } from "drizzle-orm";
 
-// Load environment variables from server app
-dotenv.config({ path: resolve(import.meta.dir, "../../../apps/server/.env") });
+const { product, productVariant } = schema;
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -27,8 +34,7 @@ if (!DATABASE_URL) {
 
 // Use node-postgres Pool for compatibility
 const pool = new Pool({ connectionString: DATABASE_URL });
-const sql = postgres(DATABASE_URL);
-const db = drizzle(pool);
+const db = drizzle(pool, { schema });
 
 // ============================================================================
 // SEED DATA
@@ -240,7 +246,6 @@ async function seedVariants() {
     throw error;
   } finally {
     await pool.end();
-    await sql.end();
   }
 }
 
