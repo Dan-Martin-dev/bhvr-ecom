@@ -38,15 +38,17 @@
     "commit": "bash scripts/lazy-git.sh"
   },
   "dependencies": {
+    "@bhvr-ecom/env": "workspace:*",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@bhvr-ecom/env": "workspace:*"
+    "nodemailer": "^7.0.12",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "turbo": "^2.6.3",
-    "typescript": "catalog:",
+    "@bhvr-ecom/config": "workspace:*",
     "@types/bun": "catalog:",
-    "@bhvr-ecom/config": "workspace:*"
+    "@types/nodemailer": "^7.0.5",
+    "turbo": "^2.6.3",
+    "typescript": "catalog:"
   },
   "packageManager": "bun@1.3.4"
 }

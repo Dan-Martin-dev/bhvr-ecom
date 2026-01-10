@@ -11,6 +11,13 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     MERCADO_PAGO_ACCESS_TOKEN: z.string().optional(),
     MERCADO_PAGO_PUBLIC_KEY: z.string().optional(),
+    // Email (Brevo/Sendinblue SMTP)
+    BREVO_SMTP_HOST: z.string().default("smtp-relay.brevo.com"),
+    BREVO_SMTP_PORT: z.coerce.number().default(587),
+    BREVO_SMTP_USER: z.string().optional(),
+    BREVO_SMTP_PASSWORD: z.string().optional(),
+    EMAIL_FROM_ADDRESS: z.string().email().default("noreply@example.com"),
+    EMAIL_FROM_NAME: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

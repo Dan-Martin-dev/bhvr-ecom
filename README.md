@@ -33,225 +33,90 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Bun** - Runtime environment
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
-- **Redis** - Caching and session storage
-- **Better Auth** - Authentication and session management
-- **Turborepo** - Optimized monorepo build system
-- **Clean Architecture** - Separation of concerns with core business logic
+ # bhvr-ecom
 
-## 📚 Documentation
+Lightweight, self-hostable e-commerce boilerplate built with the BHVR stack (Bun, Hono, Vite, React, Drizzle, Redis).
 
-- [Clean Architecture Guide](./docs/clean-architecture.md) - Understand the project structure
-- [Hono RPC Guide](./docs/hono-rpc-guide.md) - **⭐ Start here for API usage**
-- [Testing Guide](./docs/testing-guide.md) - How to write and run tests
-- [Test Results](./TEST_RESULTS.md) - Current test coverage and status
-- [Database Schema](./docs/database-schema.md) - Database structure reference
+This README summarizes quick-start steps, development commands, and links to the project's docs for deeper reading.
 
-## Getting Started
+Quick links
+- Docs: ./docs/
+- Architecture: ./docs/clean-architecture.md
+- System overview: ./docs/system-overview.md
+- Port strategy & deployment: ./docs/port-strategy.md
+- Implementation summary: ./docs/implementation-summary-2026-01-08.md
 
-### Prerequisites
+Requirements
+- Bun (runtime)
+- Docker & Docker Compose (recommended for Postgres + Redis)
+- Git (for cloning)
 
-- [Bun](https://bun.sh) runtime installed
-- PostgreSQL database (or use Docker for easy setup)
-- Mercado Pago account (for payment processing)
+Quick Start (local development)
 
-### Environment Variables
-
-Create `.env` files in the following locations:
-
-**`apps/server/.env`:**
-
-```env
-# Database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/bhvr_ecom"
-
-# Better Auth
-BETTER_AUTH_SECRET="your-super-secret-key-min-32-chars"  # Generate with: openssl rand -base64 32
-BETTER_AUTH_URL="http://localhost:3001"
-
-# CORS
-CORS_ORIGIN="http://localhost:3000"
-
-# Node Environment
-NODE_ENV="development"
-
-# Mercado Pago (Get from: https://www.mercadopago.com.ar/developers/panel/app)
-MERCADO_PAGO_ACCESS_TOKEN="APP_USR-XXXX-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-MERCADO_PAGO_PUBLIC_KEY="APP_USR-XXXX-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-```
-
-**`apps/web/.env`:**
-
-```env
-VITE_API_URL="http://localhost:3001"
-```
-
-### Installation
-
-First, install the dependencies:
+1) Start Postgres + Redis (recommended):
 
 ```bash
+# from repo root
+make docker-up
+```
+
+2) Install dependencies (once):
+
+```bash
+make install
+# or
 bun install
 ```
-## Database Setup
 
-This project uses PostgreSQL with Drizzle ORM.
-
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
-
-   ```bash
-   bun run db:push
-   ```
-
-4. Seed the database with sample data (optional):
-
-   ```bash
-   bun run db:seed
-   ```
-
-## Docker Setup (Recommended)
-
-This project includes Docker configuration for easy development and deployment.
-
-### Prerequisites
-
-- Docker and Docker Compose installed on your system
-
-### Quick Start with Docker
-
-1. **Clone and setup environment:**
-
-   ```bash
-   cp apps/server/.env.example apps/server/.env
-   cp apps/web/.env.example apps/web/.env
-   ```
-
-2. **Update environment variables in `.env` files:**
-   - Set `BETTER_AUTH_SECRET` to a secure random string
-   - Other values are pre-configured for Docker
-
-3. **Start the application:**
-
-   ```bash
-   bun run docker:dev
-   ```
-
-   This will:
-   - Build the application container
-   - Start PostgreSQL database
-   - Run database migrations
-   - Start both web (port 3000) and server (port 3001) applications
-
-### Docker Commands
-
-- `bun run docker:build` - Build the Docker images
-- `bun run docker:up` - Start services in background
-- `bun run docker:down` - Stop and remove containers
-- `bun run docker:logs` - View container logs
-- `bun run docker:dev` - Build and start for development
-
-### Accessing the Application
-
-- **Web Application**: [http://localhost:3000](http://localhost:3000)
-- **API Server**: [http://localhost:3001](http://localhost:3001)
-- **Database**: localhost:5432 (accessible from host machine)
-
-### Database Management
-
-The PostgreSQL database is automatically created with:
-
-- Database name: `bhvr_ecom`
-- Username: `postgres`
-- Password: `password`
-
-To access the database directly:
+3) Initialize database (first time):
 
 ```bash
-docker-compose exec postgres psql -U postgres -d bhvr_ecom
+make db-setup   # runs docker-up + db push + seed
 ```
 
-Or use Drizzle Studio:
+4) Start development servers (server + web):
 
 ```bash
-bun run db:studio
+make dev
 ```
 
-Then, run the development server:
+5) Verify health:
 
 ```bash
-bun run dev
+curl http://localhost:3000/api/health
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to see the web application.
-The API is running at [http://localhost:3001](http://localhost:3001).
+Notes
+- The server typically runs on port `3000` and the web app on `3001` (Vite may pick another free port).
+- Required env vars include `POSTGRES_PASSWORD`, `BETTER_AUTH_SECRET`, and optional payment envs (`MERCADO_PAGO_*`). See `apps/server/.env.example` and `apps/web/.env.example`.
 
+Commands (common)
 
+- `make docker-up` — Start Postgres + Redis (dev)
+- `make install` — Install dependencies (Bun)
+- `make db-push` / `make db-seed` — Apply schema / seed database
+- `make db-reset` — Reset DB (drop + push + seed)
+- `make dev` — Start development servers (uses `turbo dev` to run packages)
+- `make check` — TypeScript checks across the monorepo
+- `make test` — Run test suite
 
-## Project Structure
+Development pointers
+- Use `make db-reset` to return the database to a clean state when tests or seeds conflict.
+- When ports conflict, kill processes on ports `3000`, `3001`, `3002` or let Vite select a free port.
+- For production, use the multi-stage `Dockerfile` and a reverse proxy (Caddy/Nginx) as described in `./docs/port-strategy.md`.
 
-```bash
+Project layout
+
+```
 bhvr-ecom/
-├── apps/
-│   ├── web/                    # Frontend application (React + TanStack Router + Vite)
-│   └── server/                 # Backend API (Hono + Better Auth)
-├── packages/
-│   ├── auth/                   # Better Auth configuration & client
-│   ├── config/                 # Shared TypeScript configs
-│   ├── db/                     # Database schema, migrations & scripts (Drizzle)
-│   │   ├── scripts/            # Database initialization & seed scripts
-│   │   └── src/schema/         # Drizzle schema definitions
-│   └── env/                    # Environment variable validation (Zod)
-├── docker-compose.yml          # Docker services (PostgreSQL + App)
-├── Dockerfile                  # Multi-stage build for production
-└── turbo.json                  # Turborepo configuration
+├── apps/         # Deployable apps (web, server)
+├── packages/     # Shared packages (db, cache, validations, core)
+├── docs/         # Project documentation
+├── Dockerfile    # Production multi-stage build
+├── docker-compose.dev.yml
+└── Makefile      # Common dev commands
 ```
 
-## Beaver Stack Architecture
-
-This project follows the **Beaver Stack** monorepo architecture:
-
-- **`apps/`** - Deployable applications (web frontend, server backend)
-- **`packages/`** - Shared libraries and configurations
-  - Each package is independently versioned and can be used across apps
-  - Database logic (`db`), auth (`auth`), and env validation (`env`) are centralized
-- **Turborepo** - Orchestrates builds, dev servers, and caching
-- **Type Safety** - End-to-end TypeScript with Zod validation
-- **Database** - Drizzle ORM with PostgreSQL, migrations live in `packages/db`
-- **Authentication** - Better Auth provides session management and OAuth
-
-## Available Scripts
-
-### Development
-
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run dev:server`: Start only the server
-- `bun run check-types`: Check TypeScript types across all apps
-
-### Testing
-
-- `bun run test`: Run all tests across the monorepo
-- `bun run test:watch`: Run tests in watch mode
-- `make test`: Quick command to run tests
-- `make test-watch`: Quick command for watch mode
-
-**Status:** 12/29 tests passing (41% coverage). See [TEST_RESULTS.md](./TEST_RESULTS.md) and [docs/testing-guide.md](./docs/testing-guide.md) for details.
-
-### Database
-
-- `bun run db:push`: Push schema changes to database
-- `bun run db:generate`: Generate migrations from schema
-- `bun run db:migrate`: Run migrations
-- `bun run db:studio`: Open Drizzle Studio (database GUI)
-- `bun run db:seed`: Seed database with sample data
-
-### Docker
-
-- `bun run docker:dev`: Build and start for development
-- `bun run docker:up`: Start services in background
-- `bun run docker:down`: Stop and remove containers
-- `bun run docker:logs`: View container logs
-- `bun run docker:build`: Build Docker images
+Need help?
+- Read the docs in `./docs/` (system-overview, clean-architecture, port-strategy).
+- Want me to run the full dev startup for you (docker-up → db-setup → make dev)? Reply and I'll run it.

@@ -1,0 +1,23 @@
+{
+  "name": "@bhvr-ecom/email",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsc --watch --preserveWatchOutput",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bhvr-ecom/env": "workspace:*",
+    "nodemailer": "^7.0.12",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/nodemailer": "^7.0.5",
+    "@bhvr-ecom/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
