@@ -1,5 +1,6 @@
 import { auth } from "@bhvr-ecom/auth";
 import { env } from "@bhvr-ecom/env/server";
+import { verifyEmailConnection } from "@bhvr-ecom/email";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -17,6 +18,11 @@ import analytics from "./routes/analytics";
 import webhooks from "./routes/webhooks";
 import admin from "./routes/admin";
 import type { AppEnv } from "./types";
+
+// Verify email connection on startup
+verifyEmailConnection().catch((error) => {
+  console.warn("Email service verification failed - emails may not be sent:", error);
+});
 
 const app = new Hono<AppEnv>();
 

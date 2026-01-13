@@ -19,3 +19,6 @@ export * from "./orders";
 
 // Auth validations
 export * from "./auth";
+
+// Email validations
+export * from "./email";

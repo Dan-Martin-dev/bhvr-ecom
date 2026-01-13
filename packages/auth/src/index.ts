@@ -3,6 +3,7 @@ import * as schema from "@bhvr-ecom/db/schema/auth";
 import { env } from "@bhvr-ecom/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { sendPasswordResetEmail } from "@bhvr-ecom/email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -14,12 +15,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
-      // TODO: Integrate with email service when notifications are implemented
-      console.log(`Password reset for ${user.email}:`);
-      console.log(`Reset URL: ${url}`);
-      
-      // For now, log to console for development
-      // In production, this should send an actual email
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          userName: user.name || user.email.split('@')[0],
+          resetUrl: url,
+          expiresIn: "1 hour",
+        });
+      } catch (error) {
+        console.error("Failed to send password reset email:", error);
+        // Don't throw - we still want to allow the reset flow
+      }
     },
   },
   advanced: {

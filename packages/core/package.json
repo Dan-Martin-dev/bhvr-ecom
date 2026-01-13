@@ -44,6 +44,7 @@
     "zod": "catalog:",
     "drizzle-orm": "^0.45.1",
     "@bhvr-ecom/db": "workspace:*",
-    "@bhvr-ecom/validations": "workspace:*"
+    "@bhvr-ecom/validations": "workspace:*",
+    "@bhvr-ecom/email": "workspace:*"
   }
 }

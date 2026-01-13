@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@bhvr-ecom/env": "workspace:*",
+    "@bhvr-ecom/validations": "workspace:*",
     "nodemailer": "^7.0.12",
     "zod": "catalog:"
   },

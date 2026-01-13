@@ -13,6 +13,7 @@
     "@bhvr-ecom/auth": "workspace:*",
     "@bhvr-ecom/core": "workspace:*",
     "@bhvr-ecom/db": "workspace:*",
+    "@bhvr-ecom/email": "workspace:*",
     "@bhvr-ecom/env": "workspace:*",
     "@bhvr-ecom/validations": "workspace:*",
     "@hono/zod-validator": "^0.7.6",

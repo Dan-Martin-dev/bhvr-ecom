@@ -1,7 +1,8 @@
 import { db } from "@bhvr-ecom/db";
-import { order, orderItem, cart, cartItem, product, coupon } from "@bhvr-ecom/db/schema/ecommerce";
+import { order, orderItem, cart, cartItem, product, coupon, user } from "@bhvr-ecom/db/schema/ecommerce";
 import { eq, and, sql, desc } from "drizzle-orm";
 import type { CreateOrderInput, UpdateOrderStatusInput, OrderQueryInput } from "@bhvr-ecom/validations/orders";
+import { sendOrderConfirmationEmail } from "@bhvr-ecom/email";
 
 // ============================================================================
 // SHIPPING COST CALCULATION
@@ -199,6 +200,53 @@ export async function createOrder(input: CreateOrderInput, userId?: string) {
 
     return createdOrder;
   });
+
+  // Send order confirmation email (async, don't block order creation)
+  if (newOrder) {
+    // Get user email if userId is provided
+    let customerEmail = input.shippingAddress.email || "";
+    let customerName = `${input.shippingAddress.firstName} ${input.shippingAddress.lastName}`;
+
+    if (userId && !customerEmail) {
+      const userData = await db.query.user.findFirst({
+        where: eq(user.id, userId),
+        columns: { email: true, name: true },
+      });
+      if (userData) {
+        customerEmail = userData.email;
+        if (userData.name) customerName = userData.name;
+      }
+    }
+
+    // Send email asynchronously (don't await to avoid blocking)
+    if (customerEmail) {
+      sendOrderConfirmationEmail({
+        to: customerEmail,
+        customerName,
+        orderNumber: newOrder.orderNumber,
+        orderDate: newOrder.createdAt.toLocaleDateString(),
+        items: userCart.items.map((item) => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.priceAtAdd,
+          imageUrl: item.product.images?.[0] || undefined,
+        })),
+        subtotal,
+        shipping: shippingCost,
+        total,
+        shippingAddress: {
+          street: input.shippingAddress.address1,
+          city: input.shippingAddress.city,
+          state: input.shippingAddress.province,
+          postalCode: input.shippingAddress.postalCode,
+          country: "Argentina",
+        },
+      }).catch((error) => {
+        console.error("Failed to send order confirmation email:", error);
+        // Don't throw - order was created successfully
+      });
+    }
+  }
 
   return newOrder;
 }

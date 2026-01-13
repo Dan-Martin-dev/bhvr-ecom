@@ -206,11 +206,11 @@ Hetzner VPS (CPX21 or better)
 
 ### Phase 2: Growth (Current)
 
-- Product variants
-- Guest cart + merge
-- Email notifications
-- Admin product management
-- Shipping integrations
+- Product variants ✅
+- Guest cart + merge ✅
+- Email notifications ✅
+- Admin product management ✅
+- Shipping integrations ✅
 
 ### Phase 3: Scale
 
@@ -231,6 +231,7 @@ Hetzner VPS (CPX21 or better)
 | `docs/hono-rpc-guide.md` | API implementation |
 | `docs/frontend-structure.md` | Route patterns |
 | `docs/database-schema.md` | Schema reference |
+| `docs/email-setup.md` | Email configuration with Brevo |
 
 ---
 

@@ -21,6 +21,10 @@
     "./auth": {
       "types": "./src/auth.ts",
       "default": "./src/auth.ts"
+    },
+    "./email": {
+      "types": "./src/email.ts",
+      "default": "./src/email.ts"
     }
   },
   "scripts": {

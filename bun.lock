@@ -24,6 +24,7 @@
         "@bhvr-ecom/auth": "workspace:*",
         "@bhvr-ecom/core": "workspace:*",
         "@bhvr-ecom/db": "workspace:*",
+        "@bhvr-ecom/email": "workspace:*",
         "@bhvr-ecom/env": "workspace:*",
         "@bhvr-ecom/validations": "workspace:*",
         "@hono/zod-validator": "^0.7.6",
@@ -140,6 +141,22 @@
         "@bhvr-ecom/config": "workspace:*",
         "@types/pg": "^8.15.6",
         "drizzle-kit": "^0.31.8",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/email": {
+      "name": "@bhvr-ecom/email",
+      "version": "0.0.0",
+      "dependencies": {
+        "@bhvr-ecom/env": "workspace:*",
+        "@bhvr-ecom/validations": "workspace:*",
+        "nodemailer": "^7.0.12",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@bhvr-ecom/config": "workspace:*",
+        "@types/bun": "catalog:",
+        "@types/nodemailer": "^7.0.5",
         "typescript": "catalog:",
       },
     },
@@ -325,6 +342,8 @@
     "@bhvr-ecom/core": ["@bhvr-ecom/core@workspace:packages/core"],
 
     "@bhvr-ecom/db": ["@bhvr-ecom/db@workspace:packages/db"],
+
+    "@bhvr-ecom/email": ["@bhvr-ecom/email@workspace:packages/email"],
 
     "@bhvr-ecom/env": ["@bhvr-ecom/env@workspace:packages/env"],
 

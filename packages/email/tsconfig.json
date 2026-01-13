@@ -2,7 +2,10 @@
   "extends": "@bhvr-ecom/config/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "paths": {
+      "@bhvr-ecom/validations": ["../validations/src/index.ts"],
+      "@bhvr-ecom/validations/*": ["../validations/src/*.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
