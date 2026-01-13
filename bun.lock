@@ -119,6 +119,7 @@
       "name": "@bhvr-ecom/core",
       "dependencies": {
         "@bhvr-ecom/db": "workspace:*",
+        "@bhvr-ecom/email": "workspace:*",
         "@bhvr-ecom/validations": "workspace:*",
         "drizzle-orm": "^0.45.1",
         "zod": "catalog:",

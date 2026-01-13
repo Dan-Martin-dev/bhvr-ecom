@@ -1,5 +1,6 @@
 import { db } from "@bhvr-ecom/db";
-import { order, orderItem, cart, cartItem, product, coupon, user } from "@bhvr-ecom/db/schema/ecommerce";
+import { order, orderItem, cart, cartItem, product, coupon } from "@bhvr-ecom/db/schema/ecommerce";
+import { user } from "@bhvr-ecom/db/schema/auth";
 import { eq, and, sql, desc } from "drizzle-orm";
 import type { CreateOrderInput, UpdateOrderStatusInput, OrderQueryInput } from "@bhvr-ecom/validations/orders";
 import { sendOrderConfirmationEmail } from "@bhvr-ecom/email";
@@ -56,7 +57,11 @@ export async function createOrder(input: CreateOrderInput, userId?: string) {
     with: {
       items: {
         with: {
-          product: true,
+          product: {
+            with: {
+              images: true,
+            },
+          },
         },
       },
     },
@@ -204,7 +209,7 @@ export async function createOrder(input: CreateOrderInput, userId?: string) {
   // Send order confirmation email (async, don't block order creation)
   if (newOrder) {
     // Get user email if userId is provided
-    let customerEmail = input.shippingAddress.email || "";
+    let customerEmail = "";
     let customerName = `${input.shippingAddress.firstName} ${input.shippingAddress.lastName}`;
 
     if (userId && !customerEmail) {
@@ -229,7 +234,7 @@ export async function createOrder(input: CreateOrderInput, userId?: string) {
           name: item.product.name,
           quantity: item.quantity,
           price: item.priceAtAdd,
-          imageUrl: item.product.images?.[0] || undefined,
+          imageUrl: item.product.images?.[0]?.url || undefined,
         })),
         subtotal,
         shipping: shippingCost,
