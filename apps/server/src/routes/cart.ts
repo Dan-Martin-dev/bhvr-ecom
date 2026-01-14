@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { addToCartSchema, updateCartItemSchema, updateCartItemBodySchema } from "@bhvr-ecom/validations";
+import { addToCartSchema, updateCartItemBodySchema } from "@bhvr-ecom/validations";
 import * as cartUseCases from "@bhvr-ecom/core/cart";
 import { optionalAuth } from "../middleware/auth";
 import { writeRateLimit, readRateLimit } from "../middleware/rate-limit";
