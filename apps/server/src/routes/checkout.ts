@@ -5,6 +5,7 @@ import { db } from "@bhvr-ecom/db";
 import { cart, order, orderItem } from "@bhvr-ecom/db/schema/ecommerce";
 import { eq, sql } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth";
+import { checkoutRateLimit } from "../middleware/rate-limit";
 import { env } from "@bhvr-ecom/env/server";
 import type { AppEnv } from "../types";
 
@@ -63,6 +64,7 @@ async function generateOrderNumber(): Promise<string> {
  */
 const checkout = new Hono<AppEnv>().post(
   "/mercadopago",
+  checkoutRateLimit,
   authMiddleware,
   zValidator("json", createOrderSchema),
   async (c) => {

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@bhvr-ecom/auth": "workspace:*",
+    "@bhvr-ecom/cache": "workspace:*",
     "@bhvr-ecom/core": "workspace:*",
     "@bhvr-ecom/db": "workspace:*",
     "@bhvr-ecom/email": "workspace:*",

@@ -153,7 +153,7 @@ packages/
 ### 6.2 Architecture
 
 ```text
-Hetzner VPS (CPX21 or better)
+Hetzner VPS (CX23)
 ├── Dokploy (management layer)
 ├── PostgreSQL (container)
 ├── Redis (container)
@@ -165,7 +165,7 @@ Hetzner VPS (CPX21 or better)
 
 | Component | Requirement |
 | --------- | ----------- |
-| VPS Specs | 3 vCPU, 4GB RAM (Hetzner CPX21 ~€8/mo) |
+| VPS Specs | 4GB RAM (Hetzner CX23 ~€4/mo) |
 | Disk Space | 40GB SSD |
 | Domains | Custom domain with SSL (Dokploy handles Let's Encrypt) |
 | Backups | Automated daily PostgreSQL dumps |
@@ -214,10 +214,10 @@ Hetzner VPS (CPX21 or better)
 
 ### Phase 3: Scale
 
+- API rate limiting ✅
+- Analytics dashboard ✅
 - Multi-currency support
 - Inventory management UI
-- Analytics dashboard
-- API rate limiting
 - CDN for images
 
 ---

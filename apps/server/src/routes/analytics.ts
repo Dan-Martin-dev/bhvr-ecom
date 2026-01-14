@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
+import { readRateLimit } from "../middleware/rate-limit";
 import {
   getDashboardOverview,
   getSalesMetrics,
@@ -24,9 +25,8 @@ const adminMiddleware = async (_c: any, next: any) => {
 
 const analytics = new Hono();
 
-// Apply auth + admin middleware to all routes
-analytics.use("*", authMiddleware);
-analytics.use("*", adminMiddleware);
+// Apply auth + admin middleware + rate limiting to all routes
+analytics.use("*", readRateLimit, authMiddleware, adminMiddleware);
 
 // Date range validation schema
 const dateRangeSchema = z.object({

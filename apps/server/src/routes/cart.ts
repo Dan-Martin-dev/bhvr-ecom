@@ -3,12 +3,13 @@ import { zValidator } from "@hono/zod-validator";
 import { addToCartSchema, updateCartItemSchema, updateCartItemBodySchema } from "@bhvr-ecom/validations";
 import * as cartUseCases from "@bhvr-ecom/core/cart";
 import { optionalAuth } from "../middleware/auth";
+import { writeRateLimit, readRateLimit } from "../middleware/rate-limit";
 import type { AppEnv } from "../types";
 
 const cart = new Hono<AppEnv>()
   // Use optionalAuth to support both authenticated and guest users
   .use("/*", optionalAuth)
-  .get("/", async (c) => {
+  .get("/", readRateLimit, async (c) => {
     const user = c.get("user");
     const sessionId = c.req.header("x-session-id");
     
@@ -22,7 +23,7 @@ const cart = new Hono<AppEnv>()
     );
     return c.json(result);
   })
-  .post("/items", zValidator("json", addToCartSchema), async (c) => {
+  .post("/items", writeRateLimit, zValidator("json", addToCartSchema), async (c) => {
     const user = c.get("user");
     const sessionId = c.req.header("x-session-id");
     const data = c.req.valid("json");

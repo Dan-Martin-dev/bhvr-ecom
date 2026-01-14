@@ -6,15 +6,16 @@ import {
   productQuerySchema,
 } from "@bhvr-ecom/validations";
 import * as productUseCases from "@bhvr-ecom/core/products";
+import { readRateLimit, writeRateLimit } from "../middleware/rate-limit";
 import type { AppEnv } from "../types";
 
 const products = new Hono<AppEnv>()
-  .get("/", zValidator("query", productQuerySchema), async (c) => {
+  .get("/", readRateLimit, zValidator("query", productQuerySchema), async (c) => {
     const query = c.req.valid("query");
     const result = await productUseCases.getProducts(query);
     return c.json(result);
   })
-  .get("/:id", async (c) => {
+  .get("/:id", readRateLimit, async (c) => {
     const id = c.req.param("id");
     const result = await productUseCases.getProductById(id);
     
@@ -24,7 +25,7 @@ const products = new Hono<AppEnv>()
     
     return c.json(result);
   })
-  .post("/", zValidator("json", createProductSchema), async (c) => {
+  .post("/", writeRateLimit, zValidator("json", createProductSchema), async (c) => {
     const data = c.req.valid("json");
     const result = await productUseCases.createProduct(data);
     return c.json(result, 201);

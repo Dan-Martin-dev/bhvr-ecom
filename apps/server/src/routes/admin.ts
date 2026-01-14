@@ -5,6 +5,7 @@ import { order } from "@bhvr-ecom/db/schema/ecommerce";
 import { eq, desc, and, sql, count, gte } from "drizzle-orm";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
+import { adminRateLimit } from "../middleware/rate-limit";
 import type { AppEnv } from "../types";
 
 // Admin-only middleware (check user role)
@@ -33,7 +34,7 @@ const updateOrderStatusSchema = z.object({
  * Admin routes with authentication + authorization
  */
 const admin = new Hono<AppEnv>()
-  .use("/*", authMiddleware, adminMiddleware)
+  .use("/*", adminRateLimit, authMiddleware, adminMiddleware)
   /**
    * GET /api/admin/orders
    * List all orders with filtering
