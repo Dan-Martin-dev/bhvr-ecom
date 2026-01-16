@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/use-currency";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +72,7 @@ function RouteComponent() {
   const [operation, setOperation] = useState<Operation>("set");
   const queryClient = useQueryClient();
 
-  // Fetch all products for inventory management
+  const { formatPrice: formatCurrency } = useCurrency();
   const { data: productsData, isLoading } = useQuery({
     queryKey: ["inventory-products", search],
     queryFn: async () => {
@@ -141,14 +142,6 @@ function RouteComponent() {
       quantityChange: quantity,
       operation,
     });
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-      minimumFractionDigits: 0,
-    }).format(value / 100);
   };
 
   const products = productsData?.products || [];

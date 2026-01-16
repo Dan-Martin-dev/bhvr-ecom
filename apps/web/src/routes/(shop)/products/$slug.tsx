@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";import { productApi, cartApi, type Product, type ProductImage } from "@/lib/api";
+import { useCurrency } from "@/lib/use-currency";
 export const Route = createFileRoute("/(shop)/products/$slug")({
   component: ProductDetailPage,
 });
@@ -43,12 +44,7 @@ function ProductDetailPage() {
     },
   });
 
-  const formatPrice = (priceInCents: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(priceInCents / 100);
-  };
+  const { formatPrice } = useCurrency();
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;

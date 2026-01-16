@@ -41,6 +41,7 @@ packages/
 - ✅ Admin dashboard functional
 - ✅ Admin product management (CRUD interface) implemented
 - ✅ Inventory management UI with stock adjustments and low stock alerts
+- ✅ Multi-currency support (ARS, USD, EUR, BRL) with real-time conversion
 - ✅ Guest cart with localStorage and auto-merge on login
 - ✅ Shipping methods with cost calculations and delivery estimates
 - ✅ Password reset with email verification flow

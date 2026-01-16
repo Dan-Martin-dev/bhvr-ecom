@@ -218,7 +218,7 @@ Hetzner VPS (CX23)
 - API rate limiting ✅
 - Analytics dashboard ✅
 - Inventory management UI ✅
-- Multi-currency support
+- Multi-currency support ✅
 - CDN for images
 
 ---

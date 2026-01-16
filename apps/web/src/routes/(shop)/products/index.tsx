@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { productApi, type Product } from "@/lib/api";
 import { useDebounce } from "@/lib/use-debounce";
+import { useCurrency } from "@/lib/use-currency";
 import {
   Select,
   SelectContent,
@@ -88,12 +89,7 @@ function ProductsPage() {
     navigate({ search: { ...searchParams, page: newPage } });
   };
 
-  const formatPrice = (priceInCents: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(priceInCents / 100);
-  };
+  const { formatPrice } = useCurrency();
 
   if (error) {
     return (

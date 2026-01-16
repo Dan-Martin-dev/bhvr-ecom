@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/lib/use-cart";
+import { useCurrency } from "@/lib/use-currency";
 import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/(shop)/cart")({
@@ -26,12 +27,7 @@ function CartPage() {
     isRemoving,
   } = useCart(isAuthenticated);
 
-  const formatPrice = (priceInCents: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(priceInCents / 100);
-  };
+  const { formatPrice } = useCurrency();
 
   const handleQuantityChange = (cartItemId: string, delta: number, currentQuantity: number, maxStock: number) => {
     const newQuantity = currentQuantity + delta;

@@ -48,6 +48,7 @@
       "dependencies": {
         "@base-ui/react": "^1.0.0",
         "@bhvr-ecom/auth": "workspace:*",
+        "@bhvr-ecom/currency": "workspace:*",
         "@bhvr-ecom/env": "workspace:*",
         "@bhvr-ecom/validations": "workspace:*",
         "@hookform/resolvers": "^5.1.1",
@@ -127,6 +128,17 @@
         "@bhvr-ecom/validations": "workspace:*",
         "drizzle-orm": "^0.45.1",
         "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@bhvr-ecom/config": "workspace:*",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/currency": {
+      "name": "@bhvr-ecom/currency",
+      "version": "0.0.0",
+      "dependencies": {
+        "@bhvr-ecom/cache": "workspace:*",
       },
       "devDependencies": {
         "@bhvr-ecom/config": "workspace:*",
@@ -345,6 +357,8 @@
     "@bhvr-ecom/config": ["@bhvr-ecom/config@workspace:packages/config"],
 
     "@bhvr-ecom/core": ["@bhvr-ecom/core@workspace:packages/core"],
+
+    "@bhvr-ecom/currency": ["@bhvr-ecom/currency@workspace:packages/currency"],
 
     "@bhvr-ecom/db": ["@bhvr-ecom/db@workspace:packages/db"],
 

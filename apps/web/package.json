@@ -13,6 +13,7 @@
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "@bhvr-ecom/auth": "workspace:*",
+    "@bhvr-ecom/currency": "workspace:*",
     "@bhvr-ecom/env": "workspace:*",
     "@bhvr-ecom/validations": "workspace:*",
     "@hookform/resolvers": "^5.1.1",
