@@ -40,10 +40,13 @@ packages/
 - ✅ Mercado Pago payments integrated
 - ✅ Admin dashboard functional
 - ✅ Admin product management (CRUD interface) implemented
+- ✅ Inventory management UI with stock adjustments and low stock alerts
 - ✅ Guest cart with localStorage and auto-merge on login
 - ✅ Shipping methods with cost calculations and delivery estimates
 - ✅ Password reset with email verification flow
 - ✅ Routes migrated to nested structure with route groups
+- ✅ API rate limiting with Redis
+- ✅ Analytics dashboard with metrics
 
 ## Rules
 

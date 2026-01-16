@@ -92,6 +92,7 @@ bhvr-ecom is an open-source e-commerce boilerplate for developers seeking comple
 | Product Management | P0 | ✅ |
 | Customer Management | P1 | ✅ |
 | Dashboard Stats | P1 | ✅ |
+| Inventory Management UI | P1 | ✅ |
 
 ---
 
@@ -216,8 +217,8 @@ Hetzner VPS (CX23)
 
 - API rate limiting ✅
 - Analytics dashboard ✅
+- Inventory management UI ✅
 - Multi-currency support
-- Inventory management UI
 - CDN for images
 
 ---
