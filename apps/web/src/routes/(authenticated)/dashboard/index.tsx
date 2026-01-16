@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Package, ShoppingCart, Users, BarChart3 } from "lucide-react";
+import { Package, ShoppingCart, Users, BarChart3, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -32,6 +32,24 @@ function DashboardPage() {
             </p>
             <Link to="/dashboard/admin/products">
               <Button className="w-full">Manage Products</Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Inventory */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Warehouse className="w-5 h-5" />
+              Inventory
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Monitor stock levels and adjust inventory
+            </p>
+            <Link to="/dashboard/admin/inventory">
+              <Button className="w-full">Manage Inventory</Button>
             </Link>
           </CardContent>
         </Card>

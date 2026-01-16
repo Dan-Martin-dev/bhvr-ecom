@@ -17,6 +17,7 @@ import customers from "./routes/customers";
 import analytics from "./routes/analytics";
 import webhooks from "./routes/webhooks";
 import admin from "./routes/admin";
+import inventory from "./routes/inventory";
 import type { AppEnv } from "./types";
 
 // Verify email connection on startup
@@ -83,7 +84,8 @@ const api = app
   .route("/customers", customers)
   .route("/analytics", analytics)
   .route("/webhooks", webhooks)
-  .route("/admin", admin);
+  .route("/admin", admin)
+  .route("/inventory", inventory);
 
 // Serve static files in production (after API routes)
 if (process.env.NODE_ENV === "production") {

@@ -18,7 +18,7 @@ export const auth = betterAuth({
       try {
         await sendPasswordResetEmail({
           to: user.email,
-          userName: user.name || user.email.split('@')[0],
+          userName: user.name ?? user.email.split('@')[0],
           resetUrl: url,
           expiresIn: "1 hour",
         });

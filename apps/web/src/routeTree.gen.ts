@@ -27,6 +27,7 @@ import { Route as shopOrderFailureRouteImport } from './routes/(shop)/order/fail
 import { Route as authenticatedDashboardOrdersIndexRouteImport } from './routes/(authenticated)/dashboard/orders/index'
 import { Route as authenticatedDashboardOrdersOrderIdRouteImport } from './routes/(authenticated)/dashboard/orders/$orderId'
 import { Route as authenticatedDashboardAdminStatsRouteImport } from './routes/(authenticated)/dashboard/admin/stats'
+import { Route as authenticatedDashboardAdminInventoryRouteImport } from './routes/(authenticated)/dashboard/admin/inventory'
 import { Route as authenticatedDashboardAdminProductsIndexRouteImport } from './routes/(authenticated)/dashboard/admin/products/index'
 import { Route as authenticatedDashboardAdminOrdersIndexRouteImport } from './routes/(authenticated)/dashboard/admin/orders/index'
 import { Route as authenticatedDashboardAdminCustomersIndexRouteImport } from './routes/(authenticated)/dashboard/admin/customers/index'
@@ -128,6 +129,12 @@ const authenticatedDashboardAdminStatsRoute =
     path: '/admin/stats',
     getParentRoute: () => authenticatedDashboardRouteRoute,
   } as any)
+const authenticatedDashboardAdminInventoryRoute =
+  authenticatedDashboardAdminInventoryRouteImport.update({
+    id: '/admin/inventory',
+    path: '/admin/inventory',
+    getParentRoute: () => authenticatedDashboardRouteRoute,
+  } as any)
 const authenticatedDashboardAdminProductsIndexRoute =
   authenticatedDashboardAdminProductsIndexRouteImport.update({
     id: '/admin/products/',
@@ -185,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/products/$slug': typeof shopProductsSlugRoute
   '/dashboard/': typeof authenticatedDashboardIndexRoute
   '/products': typeof shopProductsIndexRoute
+  '/dashboard/admin/inventory': typeof authenticatedDashboardAdminInventoryRoute
   '/dashboard/admin/stats': typeof authenticatedDashboardAdminStatsRoute
   '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/products/$slug': typeof shopProductsSlugRoute
   '/dashboard': typeof authenticatedDashboardIndexRoute
   '/products': typeof shopProductsIndexRoute
+  '/dashboard/admin/inventory': typeof authenticatedDashboardAdminInventoryRoute
   '/dashboard/admin/stats': typeof authenticatedDashboardAdminStatsRoute
   '/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/dashboard/orders': typeof authenticatedDashboardOrdersIndexRoute
@@ -237,6 +246,7 @@ export interface FileRoutesById {
   '/(shop)/products/$slug': typeof shopProductsSlugRoute
   '/(authenticated)/dashboard/': typeof authenticatedDashboardIndexRoute
   '/(shop)/products/': typeof shopProductsIndexRoute
+  '/(authenticated)/dashboard/admin/inventory': typeof authenticatedDashboardAdminInventoryRoute
   '/(authenticated)/dashboard/admin/stats': typeof authenticatedDashboardAdminStatsRoute
   '/(authenticated)/dashboard/orders/$orderId': typeof authenticatedDashboardOrdersOrderIdRoute
   '/(authenticated)/dashboard/orders/': typeof authenticatedDashboardOrdersIndexRoute
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/products/$slug'
     | '/dashboard/'
     | '/products'
+    | '/dashboard/admin/inventory'
     | '/dashboard/admin/stats'
     | '/dashboard/orders/$orderId'
     | '/dashboard/orders'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/products/$slug'
     | '/dashboard'
     | '/products'
+    | '/dashboard/admin/inventory'
     | '/dashboard/admin/stats'
     | '/dashboard/orders/$orderId'
     | '/dashboard/orders'
@@ -315,6 +327,7 @@ export interface FileRouteTypes {
     | '/(shop)/products/$slug'
     | '/(authenticated)/dashboard/'
     | '/(shop)/products/'
+    | '/(authenticated)/dashboard/admin/inventory'
     | '/(authenticated)/dashboard/admin/stats'
     | '/(authenticated)/dashboard/orders/$orderId'
     | '/(authenticated)/dashboard/orders/'
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authenticatedDashboardAdminStatsRouteImport
       parentRoute: typeof authenticatedDashboardRouteRoute
     }
+    '/(authenticated)/dashboard/admin/inventory': {
+      id: '/(authenticated)/dashboard/admin/inventory'
+      path: '/admin/inventory'
+      fullPath: '/dashboard/admin/inventory'
+      preLoaderRoute: typeof authenticatedDashboardAdminInventoryRouteImport
+      parentRoute: typeof authenticatedDashboardRouteRoute
+    }
     '/(authenticated)/dashboard/admin/products/': {
       id: '/(authenticated)/dashboard/admin/products/'
       path: '/admin/products'
@@ -518,6 +538,7 @@ declare module '@tanstack/react-router' {
 
 interface authenticatedDashboardRouteRouteChildren {
   authenticatedDashboardIndexRoute: typeof authenticatedDashboardIndexRoute
+  authenticatedDashboardAdminInventoryRoute: typeof authenticatedDashboardAdminInventoryRoute
   authenticatedDashboardAdminStatsRoute: typeof authenticatedDashboardAdminStatsRoute
   authenticatedDashboardOrdersOrderIdRoute: typeof authenticatedDashboardOrdersOrderIdRoute
   authenticatedDashboardOrdersIndexRoute: typeof authenticatedDashboardOrdersIndexRoute
@@ -533,6 +554,8 @@ interface authenticatedDashboardRouteRouteChildren {
 const authenticatedDashboardRouteRouteChildren: authenticatedDashboardRouteRouteChildren =
   {
     authenticatedDashboardIndexRoute: authenticatedDashboardIndexRoute,
+    authenticatedDashboardAdminInventoryRoute:
+      authenticatedDashboardAdminInventoryRoute,
     authenticatedDashboardAdminStatsRoute:
       authenticatedDashboardAdminStatsRoute,
     authenticatedDashboardOrdersOrderIdRoute:
