@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { productApi, type Product } from "@/lib/api";
 import { useDebounce } from "@/lib/use-debounce";
 import { useCurrency } from "@/lib/use-currency";
+import { ProductImage } from "@/components/OptimizedImage";
 import {
   Select,
   SelectContent,
@@ -192,13 +193,11 @@ function ProductsPage() {
                     className="relative block aspect-square overflow-hidden rounded-t-lg bg-muted"
                   >
                     {product.images?.[0] ? (
-                      <img
+                      <ProductImage
                         src={product.images[0].url}
                         alt={product.images[0].alt || product.name}
-                        className="h-full w-full object-cover transition-transform hover:scale-105"
-                        loading="lazy"
-                        width={400}
-                        height={400}
+                        size="medium"
+                        className="transition-transform hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground">

@@ -50,6 +50,7 @@
         "@bhvr-ecom/auth": "workspace:*",
         "@bhvr-ecom/currency": "workspace:*",
         "@bhvr-ecom/env": "workspace:*",
+        "@bhvr-ecom/images": "workspace:*",
         "@bhvr-ecom/validations": "workspace:*",
         "@hookform/resolvers": "^5.1.1",
         "@radix-ui/react-dialog": "^1.1.15",
@@ -189,6 +190,17 @@
         "@bhvr-ecom/config": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
+      },
+    },
+    "packages/images": {
+      "name": "@bhvr-ecom/images",
+      "version": "0.0.0",
+      "dependencies": {
+        "@bhvr-ecom/env": "workspace:*",
+      },
+      "devDependencies": {
+        "@bhvr-ecom/config": "workspace:*",
+        "typescript": "^5.7.2",
       },
     },
     "packages/validations": {
@@ -365,6 +377,8 @@
     "@bhvr-ecom/email": ["@bhvr-ecom/email@workspace:packages/email"],
 
     "@bhvr-ecom/env": ["@bhvr-ecom/env@workspace:packages/env"],
+
+    "@bhvr-ecom/images": ["@bhvr-ecom/images@workspace:packages/images"],
 
     "@bhvr-ecom/validations": ["@bhvr-ecom/validations@workspace:packages/validations"],
 

@@ -32,6 +32,7 @@ packages/
 | `docs/hono-rpc-guide.md` | API usage |
 | `docs/frontend-structure.md` | Route & component patterns |
 | `docs/route-migration.md` | Route refactoring history |
+| `docs/cdn-image-optimization.md` | CDN setup and image optimization |
 
 ## Current State
 
@@ -48,6 +49,7 @@ packages/
 - ✅ Routes migrated to nested structure with route groups
 - ✅ API rate limiting with Redis
 - ✅ Analytics dashboard with metrics
+- ✅ CDN image optimization (Cloudinary, Cloudflare, imgproxy, local)
 
 ## Rules
 
@@ -57,7 +59,7 @@ packages/
 2. **Follow Clean Architecture** — Domain → Application → Infrastructure → Presentation
 3. **Core logic in packages/core** — Keep routes thin, business logic isolated
 4. **No circular dependencies** — Packages can't import from apps, only other packages
-5. **Validate at boundaries** — Use Zod schemas from `@bhvr-ecom/validations` for all external inputs
+5. **Validate  at boundaries** — Use Zod schemas from `@bhvr-ecom/validations` for all external inputs
 
 ### Database & Caching
 

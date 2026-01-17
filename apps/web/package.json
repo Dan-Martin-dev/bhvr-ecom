@@ -15,6 +15,7 @@
     "@bhvr-ecom/auth": "workspace:*",
     "@bhvr-ecom/currency": "workspace:*",
     "@bhvr-ecom/env": "workspace:*",
+    "@bhvr-ecom/images": "workspace:*",
     "@bhvr-ecom/validations": "workspace:*",
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-dialog": "^1.1.15",

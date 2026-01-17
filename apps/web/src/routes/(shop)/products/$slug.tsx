@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";import { productApi, cartApi, type Product, type ProductImage } from "@/lib/api";
+import { toast } from "sonner";
+import { productApi, cartApi, type Product, type ProductImage } from "@/lib/api";
 import { useCurrency } from "@/lib/use-currency";
+import { OptimizedImage } from "@/components/OptimizedImage";
 export const Route = createFileRoute("/(shop)/products/$slug")({
   component: ProductDetailPage,
 });
@@ -137,13 +139,17 @@ function ProductDetailPage() {
           {/* Main Image */}
           <div className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
             {product.images?.[selectedImageIndex] ? (
-              <img
+              <OptimizedImage
                 src={product.images[selectedImageIndex].url}
                 alt={product.images[selectedImageIndex].alt || product.name}
-                className="h-full w-full object-cover"
-                loading="lazy"
                 width={800}
                 height={800}
+                quality={90}
+                responsive
+                responsiveWidths={[400, 800, 1200]}
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                placeholder
+                className="rounded-lg"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -173,13 +179,13 @@ function ProductDetailPage() {
                       : "border-transparent hover:border-muted-foreground"
                   }`}
                 >
-                  <img
+                  <OptimizedImage
                     src={image.url}
                     alt={image.alt || `${product.name} ${index + 1}`}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
                     width={200}
                     height={200}
+                    quality={80}
+                    className="rounded-md"
                   />
                 </button>
               ))}

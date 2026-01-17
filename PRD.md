@@ -219,7 +219,7 @@ Hetzner VPS (CX23)
 - Analytics dashboard ✅
 - Inventory management UI ✅
 - Multi-currency support ✅
-- CDN for images
+- CDN for images ✅
 
 ---
 

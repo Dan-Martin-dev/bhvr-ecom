@@ -51,9 +51,9 @@ const RATES_TTL = 3600; // 1 hour
 export async function getExchangeRates(): Promise<Record<CurrencyCode, number>> {
   try {
     // Try to get from cache first
-    const cached = await cache.get(RATES_CACHE_KEY);
+    const cached = await cache.get<Record<CurrencyCode, number>>(RATES_CACHE_KEY);
     if (cached) {
-      return JSON.parse(cached) as Record<CurrencyCode, number>;
+      return cached;
     }
 
     // In production, fetch from external API (e.g., exchangerate-api.com)
@@ -61,7 +61,7 @@ export async function getExchangeRates(): Promise<Record<CurrencyCode, number>> 
     const rates = FALLBACK_RATES;
 
     // Cache for 1 hour
-    await cache.set(RATES_CACHE_KEY, JSON.stringify(rates), RATES_TTL);
+    await cache.set(RATES_CACHE_KEY, rates, RATES_TTL);
 
     return rates;
   } catch (error) {
