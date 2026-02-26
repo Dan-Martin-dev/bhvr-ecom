@@ -11,7 +11,9 @@ export const auth = betterAuth({
 
     schema: schema,
   }),
-  trustedOrigins: [env.CORS_ORIGIN],
+  trustedOrigins: process.env.NODE_ENV !== "production"
+    ? [env.CORS_ORIGIN, "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:5173", "http://127.0.0.1:5173"]
+    : [env.CORS_ORIGIN],
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
@@ -30,8 +32,8 @@ export const auth = betterAuth({
   },
   advanced: {
     defaultCookieAttributes: {
-      sameSite: "none",
-      secure: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
     },
   },

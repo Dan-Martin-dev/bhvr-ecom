@@ -11,6 +11,70 @@ import { productApi, cartApi, type Product, type ProductImage } from "@/lib/api"
 import { useCurrency } from "@/lib/use-currency";
 import { OptimizedImage } from "@/components/OptimizedImage";
 export const Route = createFileRoute("/(shop)/products/$slug")({
+  loader: async ({ context: { queryClient }, params: { slug } }) => {
+    try {
+      const product = await queryClient.fetchQuery({
+        queryKey: ["product", slug],
+        queryFn: async () => {
+          const result = await productApi.get(slug);
+          if (!result) throw new Error("Product not found");
+          return result as Product;
+        },
+      });
+      return { product };
+    } catch (error) {
+      return { product: null };
+    }
+  },
+  head: ({ loaderData }) => {
+    const product = loaderData?.product as Product | null;
+    if (!product) {
+      return {
+        meta: [{ title: "Product Not Found - bhvr-ecom" }]
+      };
+    }
+    
+    return {
+      meta: [
+        { title: product.metaTitle || `${product.name} - bhvr-ecom` },
+        { name: "description", content: product.metaDescription || product.description || `Buy ${product.name} at bhvr-ecom.` },
+        { property: "og:title", content: product.metaTitle || product.name },
+        { property: "og:description", content: product.metaDescription || product.description || `Buy ${product.name} at bhvr-ecom.` },
+        { property: "og:image", content: product.images?.[0]?.url || "" },
+        { property: "og:type", content: "product" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: product.metaTitle || product.name },
+        { name: "twitter:image", content: product.images?.[0]?.url || "" },
+      ],
+      links: [
+        { rel: "canonical", href: `https://bhvr-ecom.com/products/${product.slug}` }
+      ],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.name,
+            "image": product.images?.map(img => img.url) || [],
+            "description": product.description,
+            "sku": product.sku,
+            "brand": {
+              "@type": "Brand",
+              "name": "bhvr-ecom"
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://bhvr-ecom.com/products/${product.slug}`,
+              "priceCurrency": "USD",
+              "price": product.price,
+              "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+            }
+          })
+        }
+      ]
+    };
+  },
   component: ProductDetailPage,
 });
 

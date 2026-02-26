@@ -37,6 +37,18 @@ export const Route = createFileRoute("/(shop)/products/")({
       sortOrder: (search?.sortOrder as "asc" | "desc") || "desc",
     };
   },
+  head: () => ({
+    meta: [
+      { title: "Products - bhvr-ecom" },
+      { name: "description", content: "Browse our collection of premium products. Find exactly what you're looking for with our wide selection of high-quality items." },
+      { property: "og:title", content: "Products Collection - bhvr-ecom" },
+      { property: "og:description", content: "Browse our collection of premium products." },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://bhvr-ecom.com/products" }
+    ],
+  }),
 });
 
 function ProductsPage() {

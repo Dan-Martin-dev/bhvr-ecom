@@ -1,6 +1,7 @@
-import { env } from "@bhvr-ecom/env/web";
 import { createAuthClient } from "better-auth/react";
 
+// Use relative URL so auth requests go through the Vite proxy (same-origin).
+// This avoids CORS entirely in development and cookie issues with cross-origin requests.
 export const authClient = createAuthClient({
-  baseURL: env.VITE_SERVER_URL,
+  baseURL: window.location.origin,
 });

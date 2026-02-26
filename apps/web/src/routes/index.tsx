@@ -5,6 +5,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
+  head: () => ({
+    meta: [
+      { title: "Home - bhvr-ecom" },
+      { name: "description", content: "High-Performance E-Commerce Boilerplate built on the modern BHVR stack (Bun, Hono, Vite, Redis/PostgreSQL)." },
+      { property: "og:title", content: "Home - bhvr-ecom" },
+      { property: "og:description", content: "High-Performance E-Commerce Boilerplate." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Home - bhvr-ecom" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://bhvr-ecom.com/" }
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "bhvr-ecom",
+          "url": "https://bhvr-ecom.com/"
+        })
+      }
+    ]
+  }),
 });
 
 const TITLE_TEXT = `
