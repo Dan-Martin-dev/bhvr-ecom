@@ -1,19 +1,13 @@
 /**
  * Email Package
- * 
- * Provides email functionality using Nodemailer + Brevo SMTP
- * 
- * Features:
- * - Password reset emails
- * - Order confirmation emails
- * - Welcome emails
- * - Development mode (logs to console)
- * - Production mode (sends via Brevo)
- * 
+ *
+ * Transactional email via Resend (free tier: 3,000/month, 100/day).
+ * In development without RESEND_API_KEY, emails are logged to console.
+ *
  * Usage:
  * ```typescript
  * import { sendPasswordResetEmail } from '@bhvr-ecom/email';
- * 
+ *
  * await sendPasswordResetEmail({
  *   to: 'user@example.com',
  *   userName: 'John Doe',
@@ -27,5 +21,7 @@ export {
   sendPasswordResetEmail,
   sendOrderConfirmationEmail,
   sendWelcomeEmail,
+  sendOrderShippedEmail,
+  sendOrderStatusEmail,
 } from "./service";
 export * from "./templates";

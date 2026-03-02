@@ -65,6 +65,26 @@ export const welcomeEmailSchema = baseEmailSchema.extend({
   loginUrl: z.string().url("Invalid login URL"),
 });
 
+/**
+ * Order shipped email parameters — sent when admin marks order as shipped
+ */
+export const orderShippedEmailSchema = baseEmailSchema.extend({
+  customerName: z.string().min(1, "Customer name is required"),
+  orderNumber: z.string().min(1, "Order number is required"),
+  trackingNumber: z.string().optional(),
+  trackingUrl: z.string().url().optional(),
+  estimatedDelivery: z.string().optional(),
+});
+
+/**
+ * Order status update email — sent on any status transition
+ */
+export const orderStatusEmailSchema = baseEmailSchema.extend({
+  customerName: z.string().min(1, "Customer name is required"),
+  orderNumber: z.string().min(1, "Order number is required"),
+  status: z.enum(["pending", "paid", "processing", "shipped", "delivered", "cancelled", "refunded"]),
+});
+
 // ============================================================================
 // Inferred Types
 // ============================================================================
@@ -75,3 +95,5 @@ export type OrderItemEmail = z.infer<typeof orderItemEmailSchema>;
 export type ShippingAddressEmail = z.infer<typeof shippingAddressEmailSchema>;
 export type OrderConfirmationEmailParams = z.infer<typeof orderConfirmationEmailSchema>;
 export type WelcomeEmailParams = z.infer<typeof welcomeEmailSchema>;
+export type OrderShippedEmailParams = z.infer<typeof orderShippedEmailSchema>;
+export type OrderStatusEmailParams = z.infer<typeof orderStatusEmailSchema>;

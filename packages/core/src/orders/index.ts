@@ -3,7 +3,7 @@ import { order, orderItem, cart, cartItem, product, coupon } from "@bhvr-ecom/db
 import { user } from "@bhvr-ecom/db/schema/auth";
 import { eq, and, sql, desc } from "drizzle-orm";
 import type { CreateOrderInput, UpdateOrderStatusInput, OrderQueryInput } from "@bhvr-ecom/validations/orders";
-import { sendOrderConfirmationEmail } from "@bhvr-ecom/email";
+import { sendOrderConfirmationEmail, sendOrderShippedEmail, sendOrderStatusEmail } from "@bhvr-ecom/email";
 
 // ============================================================================
 // SHIPPING COST CALCULATION
@@ -342,6 +342,21 @@ export async function getUserOrders(userId: string, query: OrderQueryInput) {
 // ============================================================================
 
 export async function updateOrderStatus(input: UpdateOrderStatusInput) {
+  // Fetch order with user data to send email
+  const existingOrder = await db.query.order.findFirst({
+    where: eq(order.id, input.orderId),
+    with: {
+      items: true,
+      user: {
+        columns: { email: true, name: true },
+      },
+    },
+  });
+
+  if (!existingOrder) {
+    throw new Error("Order not found");
+  }
+
   const [updated] = await db
     .update(order)
     .set({
@@ -352,6 +367,41 @@ export async function updateOrderStatus(input: UpdateOrderStatusInput) {
     })
     .where(eq(order.id, input.orderId))
     .returning();
+
+  // Send email notification for customer-facing status changes (async, fire-and-forget)
+  const customerEmail = existingOrder.user?.email;
+  if (customerEmail) {
+    const customerName =
+      existingOrder.user?.name ??
+      existingOrder.shippingFullName ??
+      customerEmail.split("@")[0];
+
+    if (input.status === "shipped") {
+      sendOrderShippedEmail({
+        to: customerEmail,
+        customerName,
+        orderNumber: existingOrder.orderNumber,
+        trackingNumber: input.trackingNumber,
+        trackingUrl: input.trackingUrl,
+      }).catch((err) => {
+        console.error("Failed to send order shipped email:", err);
+      });
+    } else if (
+      input.status === "delivered" ||
+      input.status === "cancelled" ||
+      input.status === "refunded" ||
+      input.status === "processing"
+    ) {
+      sendOrderStatusEmail({
+        to: customerEmail,
+        customerName,
+        orderNumber: existingOrder.orderNumber,
+        status: input.status,
+      }).catch((err) => {
+        console.error("Failed to send order status email:", err);
+      });
+    }
+  }
 
   return updated;
 }

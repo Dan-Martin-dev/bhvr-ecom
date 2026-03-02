@@ -1,47 +1,21 @@
 import { env } from "@bhvr-ecom/env/server";
-import nodemailer from "nodemailer";
-import type { Transporter } from "nodemailer";
+import { Resend } from "resend";
 
 /**
- * Brevo (formerly Sendinblue) SMTP Configuration
- * 
- * Brevo SMTP Settings:
- * - Host: smtp-relay.brevo.com
- * - Port: 587 (TLS) or 465 (SSL)
- * - Authentication: Required
- * 
- * Get your credentials at: https://app.brevo.com/settings/keys/smtp
+ * Resend Email Configuration
+ *
+ * Free tier: 3,000 emails/month, 100/day
+ * Get your API key at: https://resend.com/api-keys
  */
 
-let transporter: Transporter | null = null;
+let resendClient: Resend | null = null;
 
-export function getEmailTransporter(): Transporter {
-  if (transporter) {
-    return transporter;
+export function getResendClient(): Resend {
+  if (resendClient) {
+    return resendClient;
   }
-
-  // Create transporter based on environment
-  if (env.NODE_ENV === "production") {
-    // Production: Use Brevo SMTP
-    transporter = nodemailer.createTransport({
-      host: env.BREVO_SMTP_HOST,
-      port: env.BREVO_SMTP_PORT,
-      secure: env.BREVO_SMTP_PORT === 465, // true for 465, false for other ports
-      auth: {
-        user: env.BREVO_SMTP_USER,
-        pass: env.BREVO_SMTP_PASSWORD,
-      },
-    });
-  } else {
-    // Development: Log emails to console
-    transporter = nodemailer.createTransport({
-      streamTransport: true,
-      newline: "unix",
-      buffer: true,
-    });
-  }
-
-  return transporter;
+  resendClient = new Resend(env.RESEND_API_KEY);
+  return resendClient;
 }
 
 /**
@@ -57,20 +31,24 @@ export const emailConfig = {
 } as const;
 
 /**
- * Verify email transporter connection
+ * Verify Resend client is configured
  * Call this on server startup to catch configuration errors early
  */
 export async function verifyEmailConnection(): Promise<boolean> {
   try {
-    const transport = getEmailTransporter();
-    
-    if (env.NODE_ENV === "production") {
-      await transport.verify();
-      console.log("✓ Email transporter ready (Brevo SMTP)");
-    } else {
-      console.log("✓ Email transporter ready (Development - Console logging)");
+    if (!env.RESEND_API_KEY) {
+      if (env.NODE_ENV === "production") {
+        console.error("✗ Email: RESEND_API_KEY is not set");
+        return false;
+      }
+      console.log("✓ Email transporter ready (Development - Console logging, no API key)");
+      return true;
     }
-    
+
+    // Resend doesn't have a standalone verify endpoint on free tier,
+    // but we can confirm the client initializes correctly.
+    getResendClient();
+    console.log("✓ Email transporter ready (Resend)");
     return true;
   } catch (error) {
     console.error("✗ Email transporter error:", error);

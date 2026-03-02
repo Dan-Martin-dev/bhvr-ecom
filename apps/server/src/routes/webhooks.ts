@@ -3,6 +3,7 @@ import { db } from "@bhvr-ecom/db";
 import { order } from "@bhvr-ecom/db/schema/ecommerce";
 import { eq } from "drizzle-orm";
 import { env } from "@bhvr-ecom/env/server";
+import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "@bhvr-ecom/email";
 
 const webhooks = new Hono();
 
@@ -139,9 +140,64 @@ webhooks.post("/mercadopago", async (c) => {
 
     console.log(`[Mercado Pago Webhook] Order ${orderId} updated to status: ${newStatus}`);
 
-    // TODO: Send confirmation email to customer
-    // TODO: Reduce product stock if status = "paid"
-    // TODO: Clear cart if status = "paid"
+    // Send email notifications based on status (async, fire-and-forget)
+    if (newStatus === "paid" || newStatus === "cancelled" || newStatus === "refunded") {
+      // Fetch order with user data for the email
+      const orderWithUser = await db.query.order.findFirst({
+        where: eq(order.id, orderId),
+        with: {
+          items: true,
+          user: {
+            columns: { email: true, name: true },
+          },
+        },
+      });
+
+      if (orderWithUser?.user?.email) {
+        const customerEmail = orderWithUser.user.email;
+        const customerName =
+          orderWithUser.user.name ??
+          orderWithUser.shippingFullName ??
+          customerEmail.split("@")[0];
+
+        if (newStatus === "paid") {
+          // Send full order confirmation with items on payment approval
+          sendOrderConfirmationEmail({
+            to: customerEmail,
+            customerName,
+            orderNumber: orderWithUser.orderNumber,
+            orderDate: orderWithUser.createdAt.toLocaleDateString("es-AR"),
+            items: (orderWithUser.items ?? []).map((item) => ({
+              name: item.productName,
+              quantity: item.quantity,
+              price: item.unitPrice,
+            })),
+            subtotal: orderWithUser.subtotal,
+            shipping: orderWithUser.shippingCost,
+            total: orderWithUser.total,
+            shippingAddress: {
+              street: orderWithUser.shippingStreet,
+              city: orderWithUser.shippingCity,
+              state: orderWithUser.shippingProvince,
+              postalCode: orderWithUser.shippingPostalCode,
+              country: "Argentina",
+            },
+          }).catch((err) => {
+            console.error("[Webhook] Failed to send order confirmation email:", err);
+          });
+        } else {
+          // Send status update email for cancellations / refunds
+          sendOrderStatusEmail({
+            to: customerEmail,
+            customerName,
+            orderNumber: orderWithUser.orderNumber,
+            status: newStatus,
+          }).catch((err) => {
+            console.error("[Webhook] Failed to send order status email:", err);
+          });
+        }
+      }
+    }
 
     return c.json({ status: "processed", orderId, orderStatus: newStatus });
   } catch (error) {

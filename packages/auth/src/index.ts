@@ -3,7 +3,7 @@ import * as schema from "@bhvr-ecom/db/schema/auth";
 import { env } from "@bhvr-ecom/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { sendPasswordResetEmail } from "@bhvr-ecom/email";
+import { sendPasswordResetEmail, sendWelcomeEmail } from "@bhvr-ecom/email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -28,6 +28,24 @@ export const auth = betterAuth({
         console.error("Failed to send password reset email:", error);
         // Don't throw - we still want to allow the reset flow
       }
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            await sendWelcomeEmail({
+              to: user.email,
+              userName: user.name ?? user.email.split("@")[0],
+              loginUrl: `${env.BETTER_AUTH_URL.replace(/:3001$/, ":3000")}/login`,
+            });
+          } catch (error) {
+            console.error("Failed to send welcome email:", error);
+            // Don't throw - user was created successfully
+          }
+        },
+      },
     },
   },
   advanced: {

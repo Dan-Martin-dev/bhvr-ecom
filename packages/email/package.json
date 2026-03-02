@@ -12,13 +12,12 @@
   "dependencies": {
     "@bhvr-ecom/env": "workspace:*",
     "@bhvr-ecom/validations": "workspace:*",
-    "nodemailer": "^7.0.12",
+    "resend": "^6.9.3",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "catalog:",
-    "@types/nodemailer": "^7.0.5",
     "@bhvr-ecom/config": "workspace:*",
+    "@types/bun": "catalog:",
     "typescript": "catalog:"
   }
 }
